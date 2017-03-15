@@ -6,7 +6,6 @@ import org.hibernate.annotations.FetchMode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import lombok.ToString;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
@@ -22,7 +21,6 @@ import javax.persistence.OneToOne;
 
 @Getter
 @Setter
-@ToString
 @NoArgsConstructor
 @Entity(name = "CTF_Item")
 public class Item implements Serializable {
@@ -49,8 +47,9 @@ public class Item implements Serializable {
   @JoinColumn(name = "lngCatProductID")
   private CategoryProductJoin categoryProduct;
 
-  @Column(name = "lngProductID")
-  private Integer product;
+  @OneToOne(fetch = FetchType.EAGER)
+  @JoinColumn(name = "lngProductID")
+  private Product product;
 
   @Column(name = "Open_Bal")
   private Integer openingBalance;
@@ -115,7 +114,7 @@ public class Item implements Serializable {
   private Integer receivedQuantity;
 
   @Column(name = "txtNotes")
-  private String notes;
+  private String note;
 
   @Column(name = "Qty_OnOrder")
   private Integer onOrderQuantity;
@@ -150,5 +149,9 @@ public class Item implements Serializable {
   @OneToMany(fetch = FetchType.EAGER, mappedBy = "item")
   @Fetch(FetchMode.SELECT)
   private List<Purpose> purposes;
+
+  @OneToMany(fetch = FetchType.EAGER, mappedBy = "item")
+  @Fetch(FetchMode.SELECT)
+  private List<Comment> notes;
 
 }

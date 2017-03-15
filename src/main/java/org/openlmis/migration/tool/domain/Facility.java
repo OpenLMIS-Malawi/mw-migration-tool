@@ -22,6 +22,7 @@ import javax.persistence.OneToOne;
 public class Facility implements Serializable {
   private static final long serialVersionUID = 1885948060532493308L;
 
+  @Id
   @Column(name = "Fac_Code")
   private String code;
 
@@ -88,7 +89,6 @@ public class Facility implements Serializable {
   @JoinColumn(name = "dc_GuidID", columnDefinition = "character")
   private DataCenter dataCenter;
 
-  @Id
   @Column(name = "fac_guidId", columnDefinition = "character")
   private String id;
 

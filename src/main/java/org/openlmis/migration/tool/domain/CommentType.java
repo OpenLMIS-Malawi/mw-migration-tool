@@ -19,6 +19,7 @@ import javax.persistence.Id;
 public class CommentType implements Serializable {
   private static final long serialVersionUID = 991633996839159483L;
 
+  @Id
   @Column(name = "Com_Code")
   private String code;
 
@@ -31,7 +32,6 @@ public class CommentType implements Serializable {
   @Column(name = "Com_Order")
   private Short order;
 
-  @Id
   @Column(name = "Com_GuidID")
   private String id;
 

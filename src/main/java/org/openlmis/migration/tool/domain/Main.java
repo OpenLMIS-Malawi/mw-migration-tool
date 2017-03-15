@@ -1,5 +1,6 @@
 package org.openlmis.migration.tool.domain;
 
+import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -76,6 +77,7 @@ public class Main implements Serializable  {
   @Setter
   @ToString
   @NoArgsConstructor
+  @AllArgsConstructor
   @EqualsAndHashCode
   public static class ComplexId implements Serializable {
 
