@@ -3,7 +3,6 @@ package org.openlmis.migration.tool.domain;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import lombok.ToString;
 
 import java.io.Serializable;
 
@@ -13,7 +12,6 @@ import javax.persistence.Id;
 
 @Getter
 @Setter
-@ToString
 @NoArgsConstructor
 @Entity(name = "Adj_Type")
 public class AdjustmentType implements Serializable {
@@ -38,4 +36,8 @@ public class AdjustmentType implements Serializable {
   @Column(name = "adj_guidId", columnDefinition = "character")
   private String id;
 
+  @Override
+  public String toString() {
+    return code;
+  }
 }

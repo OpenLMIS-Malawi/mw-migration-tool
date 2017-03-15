@@ -13,7 +13,7 @@ public class App {
 
   /**
    * The application start method. If passed arguments are okay it runs with spring context.
-   * Otherwise it print error message and information how to use the application.
+   * Otherwise it transform error message and information how to use the application.
    *
    * @param args a list of arguments
    */

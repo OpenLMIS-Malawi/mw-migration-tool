@@ -7,7 +7,7 @@ import static org.hibernate.cfg.AvailableSettings.SHOW_SQL;
 import net.ucanaccess.jdbc.UcanaccessDriver;
 
 import org.hibernate.dialect.SQLServerDialect;
-import org.openlmis.migration.tool.service.DisplayService;
+import org.openlmis.migration.tool.service.TransformService;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
@@ -30,8 +30,8 @@ public class AppConfiguration {
    * Here the application starts with spring context.
    */
   @Bean
-  public CommandLineRunner commandLineRunner(DisplayService displayService) {
-    return (args) -> displayService.print();
+  public CommandLineRunner commandLineRunner(TransformService transformService) {
+    return (args) -> transformService.transform();
   }
 
   /**
@@ -41,7 +41,7 @@ public class AppConfiguration {
   public DataSource dataSource(Arguments arguments) {
     DriverManagerDataSource dataSource = new DriverManagerDataSource();
     dataSource.setDriverClassName(UcanaccessDriver.class.getName());
-    dataSource.setUrl("jdbc:ucanaccess://" + arguments.getFile());
+    dataSource.setUrl("jdbc:ucanaccess://" + arguments.getFile() + ";memory=false");
 
     return dataSource;
   }
