@@ -12,6 +12,7 @@ import org.openlmis.migration.tool.domain.Main;
 import org.openlmis.migration.tool.domain.Purpose;
 import org.openlmis.migration.tool.openlmis.domain.Requisition;
 import org.openlmis.migration.tool.openlmis.domain.RequisitionLineItem;
+import org.openlmis.migration.tool.openlmis.domain.RequisitionStatus;
 import org.openlmis.migration.tool.openlmis.domain.RequisitionTemplate;
 import org.openlmis.migration.tool.openlmis.domain.StockAdjustment;
 import org.openlmis.migration.tool.openlmis.dto.FacilityDto;
@@ -35,6 +36,7 @@ import java.time.ZoneId;
 import java.time.chrono.ChronoLocalDateTime;
 import java.time.chrono.ChronoZonedDateTime;
 import java.time.format.TextStyle;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
@@ -177,6 +179,7 @@ public class ItemTransformService {
     requisition.setDraftStatusMessage(main.getNotes());
     requisition.setTemplate(template);
     requisition.setNumberOfMonthsInPeriod(processingPeriodDto.getDurationInMonths());
+    requisition.setStatus(RequisitionStatus.INITIATED);
 
     List<RequisitionLineItem> requisitionLineItems = Lists.newArrayList();
 
@@ -210,7 +213,7 @@ public class ItemTransformService {
       requisitionLineItem.setStockOnHand(item.getClosingBalance());
       requisitionLineItem.setCalculatedOrderQuantity(item.getCalculatedRequiredQuantity());
       requisitionLineItem.setRequestedQuantity(item.getRequiredQuantity());
-      requisitionLineItem.setRequestedQuantityExplanation("lagacy code");
+      requisitionLineItem.setRequestedQuantityExplanation("lagacy data");
       requisitionLineItem.setAdjustedConsumption(item.getAdjustedDispensedQuantity());
 
       requisitionLineItem.setRemarks(item.getId().toString());
@@ -223,6 +226,14 @@ public class ItemTransformService {
     }
 
     requisition.setRequisitionLineItems(requisitionLineItems);
+
+    Collection<OrderableDto> products = ORDERABLES.values();
+    
+    requisition.submit(products, null);
+    requisition.authorize(products, null);
+    requisition.approve(null, products);
+
+    //TODO: convert to order
 
     return requisition;
   }
