@@ -25,10 +25,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.function.Consumer;
 
 import javax.persistence.CascadeType;
@@ -104,66 +102,4 @@ public class Template extends BaseEntity {
         .ifPresent(list -> list.forEach(consumer));
   }
 
-  /**
-   * Create a new instance of Tamplate absed on data from {@link Importer}
-   *
-   * @param importer instance of {@link Importer}
-   * @return new instance od template.
-   */
-  public static Template newInstance(Importer importer) {
-    Template template = new Template();
-    template.setId(importer.getId());
-    template.setName(importer.getName());
-    template.setData(importer.getData());
-    template.setType(importer.getType());
-    template.setDescription(importer.getDescription());
-    template.setTemplateParameters(new ArrayList<>());
-
-    if (importer.getTemplateParameters() != null) {
-      importer.getTemplateParameters().forEach(
-          tp -> template.getTemplateParameters().add(TemplateParameter.newInstance(tp)));
-    }
-    return template;
-  }
-
-  /**
-   * Export this object to the specified exporter (DTO).
-   *
-   * @param exporter exporter to export to
-   */
-  public void export(Exporter exporter) {
-    exporter.setData(data);
-    exporter.setDescription(description);
-    exporter.setId(id);
-    exporter.setName(name);
-    exporter.setType(type);
-  }
-
-  public interface Exporter {
-    void setId(UUID id);
-
-    void setName(String name);
-
-    void setData(byte[] data);
-
-    void setType(String type);
-
-    void setDescription(String description);
-
-  }
-
-  public interface Importer {
-    UUID getId();
-
-    String getName();
-
-    byte[] getData();
-
-    String getType();
-
-    String getDescription();
-
-    List<TemplateParameter.Importer> getTemplateParameters();
-
-  }
 }

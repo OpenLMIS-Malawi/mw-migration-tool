@@ -16,6 +16,9 @@ import java.util.UUID;
 public class OpenLmisOrderableRepository {
   private static final Map<String, Orderable> ORDERABLES = Maps.newConcurrentMap();
 
+  /**
+   * Find orderable object by the passing item.
+   */
   public Orderable find(Item item) {
     Orderable orderableDto = ORDERABLES.get(item.getProductName());
 
@@ -33,9 +36,5 @@ public class OpenLmisOrderableRepository {
 
   public Collection<Orderable> findAll() {
     return ORDERABLES.values();
-  }
-
-  public Orderable find(String productName) {
-    return ORDERABLES.get(productName);
   }
 }

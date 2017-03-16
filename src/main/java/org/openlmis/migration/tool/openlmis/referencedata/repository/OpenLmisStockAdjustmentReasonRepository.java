@@ -15,6 +15,9 @@ import java.util.UUID;
 public class OpenLmisStockAdjustmentReasonRepository {
   private static final Map<String, StockAdjustmentReason> REASONS = Maps.newConcurrentMap();
 
+  /**
+   * Find stock adjustment reason based on arguments.
+   */
   public StockAdjustmentReason find(Program programDto, int order,
                                     AdjustmentType adjustmentType) {
     StockAdjustmentReason stockAdjustmentReasonDto = REASONS.get(adjustmentType.getCode());

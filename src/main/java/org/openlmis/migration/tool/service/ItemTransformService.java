@@ -138,7 +138,7 @@ public class ItemTransformService {
           .filter(line -> line.getRemarks().equals(item.getId().toString()))
           .findFirst()
           .orElse(null);
-      Orderable orderableDto = openLmisOrderableRepository.find(item.getProductName());
+      Orderable orderableDto = openLmisOrderableRepository.find(item);
 
       System.err.printf(
           format,

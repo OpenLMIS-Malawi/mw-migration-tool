@@ -25,10 +25,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.function.Consumer;
 
 import javax.persistence.CascadeType;
@@ -92,66 +90,4 @@ public class JasperTemplate extends BaseEntity {
         .ifPresent(list -> list.forEach(consumer));
   }
 
-  /**
-   * Create a new instance of Jasper template based on data from {@link JasperTemplate.Importer}
-   *
-   * @param importer instance of {@link JasperTemplate.Importer}
-   * @return new instance od template.
-   */
-  public static JasperTemplate newInstance(Importer importer) {
-    JasperTemplate jasperTemplate = new JasperTemplate();
-    jasperTemplate.setId(importer.getId());
-    jasperTemplate.setName(importer.getName());
-    jasperTemplate.setData(importer.getData());
-    jasperTemplate.setType(importer.getType());
-    jasperTemplate.setDescription(importer.getDescription());
-    jasperTemplate.setTemplateParameters(new ArrayList<>());
-
-    if (importer.getTemplateParameters() != null) {
-      importer.getTemplateParameters().forEach(tp -> jasperTemplate.getTemplateParameters()
-          .add(JasperTemplateParameter.newInstance(tp)));
-    }
-    return jasperTemplate;
-  }
-
-  /**
-   * Export this object to the specified exporter (DTO).
-   *
-   * @param exporter exporter to export to
-   */
-  public void export(Exporter exporter) {
-    exporter.setData(data);
-    exporter.setDescription(description);
-    exporter.setId(id);
-    exporter.setName(name);
-    exporter.setType(type);
-  }
-
-  public interface Exporter {
-    void setId(UUID id);
-
-    void setName(String name);
-
-    void setData(byte[] data);
-
-    void setType(String type);
-
-    void setDescription(String description);
-
-  }
-
-  public interface Importer {
-    UUID getId();
-
-    String getName();
-
-    byte[] getData();
-
-    String getType();
-
-    String getDescription();
-
-    List<JasperTemplateParameter.Importer> getTemplateParameters();
-
-  }
 }
