@@ -29,11 +29,14 @@ import static org.openlmis.migration.tool.openlmis.domain.SourceType.USER_INPUT;
 
 import com.google.common.collect.ImmutableMap;
 
+import org.openlmis.migration.tool.domain.SystemDefault;
 import org.openlmis.migration.tool.openlmis.domain.AvailableRequisitionColumn;
 import org.openlmis.migration.tool.openlmis.domain.RequisitionTemplate;
 import org.openlmis.migration.tool.openlmis.domain.RequisitionTemplateColumn;
 import org.openlmis.migration.tool.openlmis.domain.SourceType;
 import org.openlmis.migration.tool.openlmis.dto.ProgramDto;
+import org.openlmis.migration.tool.repository.SystemDefaultRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.EnumSet;
@@ -44,10 +47,18 @@ import java.util.Set;
 @Service
 public class OpenLmisRequisitionTemplateRepository {
 
+  @Autowired
+  private SystemDefaultRepository systemDefaultRepository;
+
   public RequisitionTemplate find(ProgramDto program) {
+    SystemDefault systemDefault = systemDefaultRepository
+        .findAll()
+        .iterator()
+        .next();
+
     RequisitionTemplate template = new RequisitionTemplate();
     template.setProgramId(program.getId());
-    template.setNumberOfPeriodsToAverage(2);
+    template.setNumberOfPeriodsToAverage(systemDefault.getNumberOfPeriodsToAverage().intValue());
     template.setColumnsMap(getRequisitionTemplateColumnMap());
 
     template.changeColumnSource(TOTAL_CONSUMED_QUANTITY, USER_INPUT);
