@@ -10,6 +10,7 @@ import org.openlmis.migration.tool.domain.Facility;
 import org.openlmis.migration.tool.domain.Item;
 import org.openlmis.migration.tool.domain.Main;
 import org.openlmis.migration.tool.domain.Purpose;
+import org.openlmis.migration.tool.domain.SystemDefault;
 import org.openlmis.migration.tool.openlmis.domain.Requisition;
 import org.openlmis.migration.tool.openlmis.domain.RequisitionLineItem;
 import org.openlmis.migration.tool.openlmis.domain.RequisitionStatus;
@@ -27,6 +28,7 @@ import org.openlmis.migration.tool.openlmis.repository.OpenLmisRequisitionTempla
 import org.openlmis.migration.tool.repository.FacilityRepository;
 import org.openlmis.migration.tool.repository.ItemRepository;
 import org.openlmis.migration.tool.repository.MainRepository;
+import org.openlmis.migration.tool.repository.SystemDefaultRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -37,7 +39,6 @@ import java.time.chrono.ChronoLocalDateTime;
 import java.time.chrono.ChronoZonedDateTime;
 import java.time.format.TextStyle;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -71,6 +72,9 @@ public class ItemTransformService {
   @Autowired
   private OpenLmisRequisitionTemplateRepository openLmisRequisitionTemplateRepository;
 
+  @Autowired
+  private SystemDefaultRepository systemDefaultRepository;
+
   public void transform() {
     String format = "%-8s|" +
         "%-57s|" +
@@ -88,10 +92,12 @@ public class ItemTransformService {
         "%-13s|" +
         "%-5s%n";
 
-    List<LocalDateTime> processingDates = itemRepository.getProcessingDates();
-    processingDates.sort(Comparator.reverseOrder());
+    SystemDefault systemDefault = systemDefaultRepository
+        .findAll()
+        .iterator()
+        .next();
 
-    LocalDateTime processingDate = processingDates.get(1);
+    LocalDateTime processingDate = systemDefault.getCurrentMonth();
     Facility facility = facilityRepository.findOne("A");
 
     Main main = mainRepository.findOne(new Main.ComplexId(facility, processingDate));
