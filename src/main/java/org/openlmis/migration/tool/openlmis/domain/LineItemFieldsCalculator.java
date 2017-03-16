@@ -167,9 +167,10 @@ public final class LineItemFieldsCalculator {
     BigDecimal divide = new BigDecimal(totalDays)
         .divide(new BigDecimal(nonStockoutDays), 1000, BigDecimal.ROUND_HALF_UP);
 
+    // in OpenLMIS Core is RoundingMode.CEILING
     BigDecimal adjustedConsumption = new BigDecimal(consumedQuantity)
         .multiply(divide)
-        .setScale(0, RoundingMode.CEILING);
+        .setScale(0, RoundingMode.HALF_UP);
 
     return adjustedConsumption.intValue();
   }

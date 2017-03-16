@@ -1,10 +1,10 @@
 package org.openlmis.migration.tool.service;
 
-import static org.apache.commons.lang.BooleanUtils.isTrue;
-
-import com.beust.jcommander.internal.Lists;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 import org.openlmis.migration.tool.domain.Adjustment;
+import org.openlmis.migration.tool.domain.AdjustmentType;
 import org.openlmis.migration.tool.domain.Comment;
 import org.openlmis.migration.tool.domain.Facility;
 import org.openlmis.migration.tool.domain.Item;
@@ -13,9 +13,12 @@ import org.openlmis.migration.tool.domain.Purpose;
 import org.openlmis.migration.tool.openlmis.domain.Requisition;
 import org.openlmis.migration.tool.openlmis.domain.RequisitionLineItem;
 import org.openlmis.migration.tool.openlmis.domain.RequisitionTemplate;
+import org.openlmis.migration.tool.openlmis.domain.StockAdjustment;
 import org.openlmis.migration.tool.openlmis.dto.FacilityDto;
+import org.openlmis.migration.tool.openlmis.dto.OrderableDto;
 import org.openlmis.migration.tool.openlmis.dto.ProcessingPeriodDto;
 import org.openlmis.migration.tool.openlmis.dto.ProgramDto;
+import org.openlmis.migration.tool.openlmis.dto.StockAdjustmentReasonDto;
 import org.openlmis.migration.tool.openlmis.repository.OpenLmisFacilityRepository;
 import org.openlmis.migration.tool.openlmis.repository.OpenLmisProcessingPeriodRepository;
 import org.openlmis.migration.tool.openlmis.repository.OpenLmisProgramRepository;
@@ -26,6 +29,7 @@ import org.openlmis.migration.tool.repository.MainRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.chrono.ChronoLocalDateTime;
@@ -34,12 +38,15 @@ import java.time.format.TextStyle;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
 public class ItemTransformService {
+  private static final Map<String, OrderableDto> ORDERABLES = Maps.newConcurrentMap();
+  private static final Map<String, StockAdjustmentReasonDto> REASONS = Maps.newConcurrentMap();
 
   @Autowired
   private ItemRepository itemRepository;
@@ -63,8 +70,7 @@ public class ItemTransformService {
   private OpenLmisRequisitionTemplateRepository openLmisRequisitionTemplateRepository;
 
   public void transform() {
-    String format = "%-43s|" +
-        "%-8s|" +
+    String format = "%-8s|" +
         "%-57s|" +
         "%-14s|" +
         "%-18s|" +
@@ -116,7 +122,7 @@ public class ItemTransformService {
     System.err.printf("Date Received: %s Date Shipment Received: %s%n%n", printDate(main.getReceivedDate()), printDate(main.getShipmentReceivedData()));
     System.err.printf(
         format,
-        "Category Name", "Product", "Product Description", "Stock on Hand",
+        "Product", "Product Description", "Stock on Hand",
         "Adjustment Amount", "Adjustment Type", "Quantity Consumed", "Purpose of Use",
         "Stocked Out Days", "Adjusted Consumption", "Months of Stock", "Calculated Quantity",
         "Reorder Quantity", "Receipts", "Stocked Out?", "Notes"
@@ -129,19 +135,24 @@ public class ItemTransformService {
           .filter(line -> line.getRemarks().equals(item.getId().toString()))
           .findFirst()
           .orElse(null);
+      OrderableDto orderableDto = ORDERABLES.get(item.getProductName());
 
       System.err.printf(
           format,
-          item.getCategoryProduct().getProduct().getProgramName(),
-          item.getProduct().getProductId(), item.getProductName(),
+          orderableDto.getProductCode(),
+          orderableDto.getName(),
           requisitionLineItem.getStockOnHand(),
-          countAdjustments(item.getAdjustments()), item.getAdjustmentType(),
-          requisitionLineItem.getTotalConsumedQuantity(), countPurposes(item.getPurposes()),
+          requisitionLineItem.getTotalLossesAndAdjustments(),
+          item.getAdjustmentType(),
+          requisitionLineItem.getTotalConsumedQuantity(),
+          countPurposes(item.getPurposes()),
           requisitionLineItem.getTotalStockoutDays(),
           requisitionLineItem.getAdjustedConsumption(),
-          "<months_of_stock>", requisitionLineItem.getCalculatedOrderQuantity(),
+          getMonthsOfStock(requisitionLineItem),
+          requisitionLineItem.getCalculatedOrderQuantity(),
           requisitionLineItem.getRequestedQuantity(),
-          item.getReceipts(), item.getProductStockedOut(),
+          requisitionLineItem.getTotalReceivedQuantity(),
+          item.getProductStockedOut(),
           printNotes(item.getNotes())
       );
     });
@@ -170,22 +181,43 @@ public class ItemTransformService {
     List<RequisitionLineItem> requisitionLineItems = Lists.newArrayList();
 
     for (Item item : items) {
+      OrderableDto orderableDto = getOrderable(item);
+
       RequisitionLineItem requisitionLineItem = new RequisitionLineItem();
+      requisitionLineItem.setMaxPeriodsOfStock(BigDecimal.valueOf(processingPeriodDto.getDurationInMonths()));
       requisitionLineItem.setRequisition(requisition);
-      requisitionLineItem.setOrderableId(UUID.randomUUID());
-      requisitionLineItem.setStockOnHand(item.getClosingBalance());
+      requisitionLineItem.setSkipped(false);
+      requisitionLineItem.setOrderableId(orderableDto.getId());
+      requisitionLineItem.setTotalReceivedQuantity(item.getReceipts());
       requisitionLineItem.setTotalConsumedQuantity(item.getDispensedQuantity());
+
+      List<Adjustment> adjustments = item.getAdjustments();
+      List<StockAdjustment> stockAdjustments = Lists.newArrayList();
+      for (int i = 0, adjustmentsSize = adjustments.size(); i < adjustmentsSize; i++) {
+        Adjustment adjustment = adjustments.get(i);
+        AdjustmentType adjustmentType = adjustment.getType();
+        StockAdjustmentReasonDto stockAdjustmentReasonDto = getStockAdjustmentReason(programDto, i, adjustmentType);
+
+        StockAdjustment stockAdjustment = new StockAdjustment();
+        stockAdjustment.setReasonId(stockAdjustmentReasonDto.getId());
+        stockAdjustment.setQuantity(adjustment.getQuantity());
+
+        stockAdjustments.add(stockAdjustment);
+      }
+
+      requisitionLineItem.setStockAdjustments(stockAdjustments);
       requisitionLineItem.setTotalStockoutDays(item.getStockedOutDays().intValue());
-      requisitionLineItem.setAdjustedConsumption(item.getAdjustedDispensedQuantity());
+      requisitionLineItem.setStockOnHand(item.getClosingBalance());
+      requisitionLineItem.setCalculatedOrderQuantity(item.getCalculatedRequiredQuantity());
       requisitionLineItem.setRequestedQuantity(item.getRequiredQuantity());
+      requisitionLineItem.setRequestedQuantityExplanation("lagacy code");
+      requisitionLineItem.setAdjustedConsumption(item.getAdjustedDispensedQuantity());
+
       requisitionLineItem.setRemarks(item.getId().toString());
 
-      // TODO: add adjustments
-
-      // TODO: fix this
-      //requisitionLineItem.calculateAndSetFields(
-      //    template, Collections.emptyList(), requisition.getNumberOfMonthsInPeriod()
-      //);
+      requisitionLineItem.calculateAndSetFields(
+          template, REASONS.values(), requisition.getNumberOfMonthsInPeriod()
+      );
 
       requisitionLineItems.add(requisitionLineItem);
     }
@@ -195,21 +227,44 @@ public class ItemTransformService {
     return requisition;
   }
 
+  private OrderableDto getOrderable(Item item) {
+    OrderableDto orderableDto = ORDERABLES.get(item.getProductName());
+
+    if (null == orderableDto) {
+      orderableDto = new OrderableDto();
+      orderableDto.setId(UUID.randomUUID());
+      orderableDto.setProductCode(item.getProduct().getProductId());
+      orderableDto.setName(item.getProductName());
+
+      ORDERABLES.put(item.getProductName(), orderableDto);
+    }
+    
+    return orderableDto;
+  }
+
+  private StockAdjustmentReasonDto getStockAdjustmentReason(ProgramDto programDto, int i,
+                                                            AdjustmentType adjustmentType) {
+    StockAdjustmentReasonDto stockAdjustmentReasonDto = REASONS.get(adjustmentType.getCode());
+
+    if (null == stockAdjustmentReasonDto) {
+      stockAdjustmentReasonDto = new StockAdjustmentReasonDto();
+      stockAdjustmentReasonDto.setId(UUID.randomUUID());
+      stockAdjustmentReasonDto.setProgramId(programDto.getId());
+      stockAdjustmentReasonDto.setName(adjustmentType.getCode());
+      stockAdjustmentReasonDto.setDescription(adjustmentType.getName());
+      stockAdjustmentReasonDto.setAdditive(!adjustmentType.getNegative());
+      stockAdjustmentReasonDto.setDisplayOrder(i);
+
+      REASONS.put(adjustmentType.getCode(), stockAdjustmentReasonDto);
+    }
+    
+    return stockAdjustmentReasonDto;
+  }
+
   private int countPurposes(List<Purpose> purposes) {
     return null != purposes
         ? purposes.stream().map(Purpose::getQuantity).reduce(0, (a, b) -> a + b)
         : 0;
-  }
-
-  private int countAdjustments(List<Adjustment> adjustments) {
-    if (null == adjustments) {
-      return 0;
-    }
-
-    return adjustments
-        .stream()
-        .map(a -> a.getQuantity() * (isTrue(a.getType().getNegative()) ? -1 : 1))
-        .reduce(0, (a, b) -> a + b);
   }
 
   private String printNotes(List<Comment> comments) {
@@ -238,6 +293,20 @@ public class ItemTransformService {
         period.getEndDate().getMonth().getDisplayName(TextStyle.SHORT, Locale.ENGLISH),
         period.getStartDate().getYear()
     );
+  }
+
+  private Double getMonthsOfStock(RequisitionLineItem requisitionLineItem) {
+    if (0 == requisitionLineItem.getAdjustedConsumption()) {
+      return 0.0;
+    }
+
+    return BigDecimal.valueOf(requisitionLineItem.getStockOnHand())
+        .divide(
+            BigDecimal.valueOf(requisitionLineItem.getAdjustedConsumption()),
+            1,
+            BigDecimal.ROUND_HALF_UP
+        )
+        .doubleValue();
   }
 
 }
