@@ -21,7 +21,7 @@
 
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-        <check.code.skip>${maven.test.skip}</check.code.skip>
+        <check.code.skip>true</check.code.skip>
         <pmd.skip>${check.code.skip}</pmd.skip>
         <checkstyle.skip>${check.code.skip}</checkstyle.skip>
     </properties>
