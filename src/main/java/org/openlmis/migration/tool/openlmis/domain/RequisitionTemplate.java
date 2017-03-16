@@ -43,7 +43,7 @@ public class RequisitionTemplate extends BaseTimestampedEntity {
   public static final String SOURCE = "Source ";
   public static final String OPTION = "Option ";
   public static final String WARNING_SUFFIX = " is not available for this column.";
-  private static final String UUID = "pg-uuid";
+
   @Getter
   @Setter
   @Type(type = UUID)

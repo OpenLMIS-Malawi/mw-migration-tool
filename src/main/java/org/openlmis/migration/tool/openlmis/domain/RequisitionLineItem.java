@@ -79,9 +79,14 @@ public class RequisitionLineItem extends BaseEntity {
   public static final String AVERAGE_CONSUMPTION = "averageConsumption";
   public static final String MAXIMUM_STOCK_QUANTITY = "maximumStockQuantity";
   public static final String CALCULATED_ORDER_QUANTITY = "calculatedOrderQuantity";
+  public static final String PRODUCT_CODE = "productCode";
+  public static final String PRODUCT = "productName";
+  public static final String PRICE_PER_PACK = "pricePerPack";
+  public static final String DISPENSING_UNIT = "dispensingUnit";
+  public static final String PACKS_TO_SHIP = "packsToShip";
+  public static final String TOTAL_COST = "totalCost";
   static final BigDecimal PRICE_PER_PACK_IF_NULL = BigDecimal.ZERO;
   private static final Logger LOGGER = LoggerFactory.getLogger(RequisitionLineItem.class);
-  private static final String UUID = "pg-uuid";
 
   @Getter
   @Setter
