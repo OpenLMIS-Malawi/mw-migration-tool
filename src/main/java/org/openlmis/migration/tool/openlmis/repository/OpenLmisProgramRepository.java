@@ -8,6 +8,9 @@ import java.util.UUID;
 @Service
 public class OpenLmisProgramRepository {
 
+  /**
+   * Find correct program.
+   */
   public ProgramDto find() {
     ProgramDto programDto = new ProgramDto();
     programDto.setId(UUID.randomUUID());

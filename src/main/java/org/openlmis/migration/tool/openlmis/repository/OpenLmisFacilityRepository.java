@@ -9,6 +9,9 @@ import java.util.UUID;
 @Service
 public class OpenLmisFacilityRepository {
 
+  /**
+   * Find correct OpenLMIS facility based on data from SCMgr facility object.
+   */
   public FacilityDto find(Facility facility) {
     FacilityDto facilityDto = new FacilityDto();
     facilityDto.setId(UUID.randomUUID());

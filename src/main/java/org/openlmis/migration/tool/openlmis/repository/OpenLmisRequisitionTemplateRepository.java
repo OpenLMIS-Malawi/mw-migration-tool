@@ -50,6 +50,9 @@ public class OpenLmisRequisitionTemplateRepository {
   @Autowired
   private SystemDefaultRepository systemDefaultRepository;
 
+  /**
+   * Retrieve a requisition template for the given program.
+   */
   public RequisitionTemplate find(ProgramDto program) {
     SystemDefault systemDefault = systemDefaultRepository
         .findAll()
@@ -74,25 +77,46 @@ public class OpenLmisRequisitionTemplateRepository {
         .put(PRODUCT_CODE, create(PRODUCT_CODE, "O", EnumSet.of(REFERENCE_DATA), true))
         .put(PRODUCT, create(PRODUCT, "R", EnumSet.of(REFERENCE_DATA), true))
         .put(BEGINNING_BALANCE, create(BEGINNING_BALANCE, "A", EnumSet.of(USER_INPUT), false))
-        .put(TOTAL_RECEIVED_QUANTITY, create(TOTAL_RECEIVED_QUANTITY, "B", EnumSet.of(USER_INPUT), true ))
-        .put(TOTAL_CONSUMED_QUANTITY, create(TOTAL_CONSUMED_QUANTITY, "C", EnumSet.of(USER_INPUT, CALCULATED), true))
-        .put(TOTAL_LOSSES_AND_ADJUSTMENTS, create(TOTAL_LOSSES_AND_ADJUSTMENTS, "D", EnumSet.of(USER_INPUT), true))
+        .put(
+            TOTAL_RECEIVED_QUANTITY,
+            create(TOTAL_RECEIVED_QUANTITY, "B", EnumSet.of(USER_INPUT), true)
+        )
+        .put(
+            TOTAL_CONSUMED_QUANTITY,
+            create(TOTAL_CONSUMED_QUANTITY, "C", EnumSet.of(USER_INPUT, CALCULATED), true)
+        )
+        .put(
+            TOTAL_LOSSES_AND_ADJUSTMENTS,
+            create(TOTAL_LOSSES_AND_ADJUSTMENTS, "D", EnumSet.of(USER_INPUT), true)
+        )
         .put(TOTAL_STOCKOUT_DAYS, create(TOTAL_STOCKOUT_DAYS, "X", EnumSet.of(USER_INPUT), true))
         .put(STOCK_ON_HAND, create(STOCK_ON_HAND, "E", EnumSet.of(USER_INPUT, CALCULATED), true))
         .put(AVERAGE_CONSUMPTION, create(AVERAGE_CONSUMPTION, "P", EnumSet.of(CALCULATED), false))
-        .put(CALCULATED_ORDER_QUANTITY, create(CALCULATED_ORDER_QUANTITY, "I", EnumSet.of(CALCULATED), true))
+        .put(
+            CALCULATED_ORDER_QUANTITY,
+            create(CALCULATED_ORDER_QUANTITY, "I", EnumSet.of(CALCULATED), true)
+        )
         .put(PRICE_PER_PACK, create(PRICE_PER_PACK, "T", EnumSet.of(REFERENCE_DATA), false))
         .put(DISPENSING_UNIT, create(DISPENSING_UNIT, "U", EnumSet.of(REFERENCE_DATA), false))
         .put(REQUESTED_QUANTITY, create(REQUESTED_QUANTITY, "J", EnumSet.of(USER_INPUT), true))
-        .put(REQUESTED_QUANTITY_EXPLANATION, create(REQUESTED_QUANTITY_EXPLANATION, "W", EnumSet.of(USER_INPUT), true))
+        .put(
+            REQUESTED_QUANTITY_EXPLANATION,
+            create(REQUESTED_QUANTITY_EXPLANATION, "W", EnumSet.of(USER_INPUT), true)
+        )
         .put(APPROVED_QUANTITY, create(APPROVED_QUANTITY, "K", EnumSet.of(USER_INPUT), true))
         .put(REMARKS_COLUMN, create(REMARKS_COLUMN, "L", EnumSet.of(USER_INPUT), true))
         .put(TOTAL_COLUMN, create(TOTAL_COLUMN, "Y", EnumSet.of(CALCULATED), true))
         .put(PACKS_TO_SHIP, create(PACKS_TO_SHIP, "V", EnumSet.of(CALCULATED), false))
-        .put(NUMBER_OF_NEW_PATIENTS_ADDED, create(NUMBER_OF_NEW_PATIENTS_ADDED, "F", EnumSet.of(USER_INPUT), false))
+        .put(
+            NUMBER_OF_NEW_PATIENTS_ADDED,
+            create(NUMBER_OF_NEW_PATIENTS_ADDED, "F", EnumSet.of(USER_INPUT), false)
+        )
         .put(TOTAL_COST, create(TOTAL_COST, "Q", EnumSet.of(CALCULATED), false))
         .put(ADJUSTED_CONSUMPTION, create(ADJUSTED_CONSUMPTION, "N", EnumSet.of(CALCULATED), true))
-        .put(MAXIMUM_STOCK_QUANTITY, create(MAXIMUM_STOCK_QUANTITY, "H", EnumSet.of(CALCULATED), false))
+        .put(
+            MAXIMUM_STOCK_QUANTITY,
+            create(MAXIMUM_STOCK_QUANTITY, "H", EnumSet.of(CALCULATED), false)
+        )
         .build();
   }
 

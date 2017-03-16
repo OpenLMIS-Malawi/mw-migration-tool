@@ -75,23 +75,10 @@ public class ItemTransformService {
   @Autowired
   private SystemDefaultRepository systemDefaultRepository;
 
+  /**
+   * Transform Item instance to RequsitionLineItem instance.
+   */
   public void transform() {
-    String format = "%-8s|" +
-        "%-57s|" +
-        "%-14s|" +
-        "%-18s|" +
-        "%-16s|" +
-        "%-18s|" +
-        "%-17s|" +
-        "%-17s|" +
-        "%-21s|" +
-        "%-18s|" +
-        "%-20s|" +
-        "%-17s|" +
-        "%-9s|" +
-        "%-13s|" +
-        "%-5s%n";
-
     SystemDefault systemDefault = systemDefaultRepository
         .findAll()
         .iterator()
@@ -125,9 +112,15 @@ public class ItemTransformService {
         main, items, facilityDto, programDto, processingPeriodDto, template
     );
 
+    String format =
+        "%-8s|%-57s|%-14s|%-18s|%-16s|%-18s|%-17s|%-17s|%-21s|%-18s|%-20s|%-17s|%-9s|%-13s|%-5s%n";
+
     System.err.printf("Facility (code): %s (%s)%n", facilityDto.getName(), facilityDto.getCode());
     System.err.printf("Period: %s%n", printPeriod(processingPeriodDto));
-    System.err.printf("Date Received: %s Date Shipment Received: %s%n%n", printDate(main.getReceivedDate()), printDate(main.getShipmentReceivedData()));
+    System.err.printf(
+        "Date Received: %s Date Shipment Received: %s%n%n",
+        printDate(main.getReceivedDate()), printDate(main.getShipmentReceivedData())
+    );
     System.err.printf(
         format,
         "Product", "Product Description", "Stock on Hand",
@@ -166,9 +159,18 @@ public class ItemTransformService {
     });
 
     System.err.println();
-    System.err.printf("First input (date):  %-10s (%-10s)%n", main.getCreatedBy(), printDate(requisition.getCreatedDate()));
-    System.err.printf("Last changed (date): %-10s (%-10s)%n", main.getModifiedBy(), printDate(requisition.getModifiedDate()));
-    System.err.printf("Comment: %s%n", Optional.ofNullable(requisition.getDraftStatusMessage()).orElse(""));
+    System.err.printf(
+        "First input (date):  %-10s (%-10s)%n",
+        main.getCreatedBy(), printDate(requisition.getCreatedDate())
+    );
+    System.err.printf(
+        "Last changed (date): %-10s (%-10s)%n",
+        main.getModifiedBy(), printDate(requisition.getModifiedDate())
+    );
+    System.err.printf(
+        "Comment: %s%n",
+        Optional.ofNullable(requisition.getDraftStatusMessage()).orElse("")
+    );
   }
 
   private Requisition createRequisition(Main main, List<Item> items,
@@ -176,56 +178,15 @@ public class ItemTransformService {
                                         ProgramDto programDto,
                                         ProcessingPeriodDto processingPeriodDto,
                                         RequisitionTemplate template) {
-    Requisition requisition = new Requisition();
-    requisition.setFacilityId(facilityDto.getId());
-    requisition.setProgramId(programDto.getId());
-    requisition.setProcessingPeriodId(processingPeriodDto.getId());
-    requisition.setCreatedDate(main.getCreatedDate().atZone(ZoneId.systemDefault()));
-    requisition.setModifiedDate(main.getModifiedDate().atZone(ZoneId.systemDefault()));
-    requisition.setDraftStatusMessage(main.getNotes());
-    requisition.setTemplate(template);
-    requisition.setNumberOfMonthsInPeriod(processingPeriodDto.getDurationInMonths());
-    requisition.setStatus(RequisitionStatus.INITIATED);
+    Requisition requisition = initRequisition(
+        main, facilityDto, programDto, processingPeriodDto, template
+    );
 
     List<RequisitionLineItem> requisitionLineItems = Lists.newArrayList();
 
     for (Item item : items) {
-      OrderableDto orderableDto = getOrderable(item);
-
-      RequisitionLineItem requisitionLineItem = new RequisitionLineItem();
-      requisitionLineItem.setMaxPeriodsOfStock(BigDecimal.valueOf(processingPeriodDto.getDurationInMonths()));
-      requisitionLineItem.setRequisition(requisition);
-      requisitionLineItem.setSkipped(false);
-      requisitionLineItem.setOrderableId(orderableDto.getId());
-      requisitionLineItem.setTotalReceivedQuantity(item.getReceipts());
-      requisitionLineItem.setTotalConsumedQuantity(item.getDispensedQuantity());
-
-      List<Adjustment> adjustments = item.getAdjustments();
-      List<StockAdjustment> stockAdjustments = Lists.newArrayList();
-      for (int i = 0, adjustmentsSize = adjustments.size(); i < adjustmentsSize; i++) {
-        Adjustment adjustment = adjustments.get(i);
-        AdjustmentType adjustmentType = adjustment.getType();
-        StockAdjustmentReasonDto stockAdjustmentReasonDto = getStockAdjustmentReason(programDto, i, adjustmentType);
-
-        StockAdjustment stockAdjustment = new StockAdjustment();
-        stockAdjustment.setReasonId(stockAdjustmentReasonDto.getId());
-        stockAdjustment.setQuantity(adjustment.getQuantity());
-
-        stockAdjustments.add(stockAdjustment);
-      }
-
-      requisitionLineItem.setStockAdjustments(stockAdjustments);
-      requisitionLineItem.setTotalStockoutDays(item.getStockedOutDays().intValue());
-      requisitionLineItem.setStockOnHand(item.getClosingBalance());
-      requisitionLineItem.setCalculatedOrderQuantity(item.getCalculatedRequiredQuantity());
-      requisitionLineItem.setRequestedQuantity(item.getRequiredQuantity());
-      requisitionLineItem.setRequestedQuantityExplanation("lagacy data");
-      requisitionLineItem.setAdjustedConsumption(item.getAdjustedDispensedQuantity());
-
-      requisitionLineItem.setRemarks(item.getId().toString());
-
-      requisitionLineItem.calculateAndSetFields(
-          template, REASONS.values(), requisition.getNumberOfMonthsInPeriod()
+      RequisitionLineItem requisitionLineItem = createRequisitionLineItem(
+          programDto, processingPeriodDto, template, requisition, item
       );
 
       requisitionLineItems.add(requisitionLineItem);
@@ -244,6 +205,71 @@ public class ItemTransformService {
     return requisition;
   }
 
+  private RequisitionLineItem createRequisitionLineItem(ProgramDto programDto,
+                                                        ProcessingPeriodDto processingPeriodDto,
+                                                        RequisitionTemplate template,
+                                                        Requisition requisition,
+                                                        Item item) {
+    OrderableDto orderableDto = getOrderable(item);
+
+    RequisitionLineItem requisitionLineItem = new RequisitionLineItem();
+    requisitionLineItem.setMaxPeriodsOfStock(
+        BigDecimal.valueOf(processingPeriodDto.getDurationInMonths())
+    );
+    requisitionLineItem.setRequisition(requisition);
+    requisitionLineItem.setSkipped(false);
+    requisitionLineItem.setOrderableId(orderableDto.getId());
+    requisitionLineItem.setTotalReceivedQuantity(item.getReceipts());
+    requisitionLineItem.setTotalConsumedQuantity(item.getDispensedQuantity());
+
+    List<Adjustment> adjustments = item.getAdjustments();
+    List<StockAdjustment> stockAdjustments = Lists.newArrayList();
+    for (int i = 0, adjustmentsSize = adjustments.size(); i < adjustmentsSize; i++) {
+      Adjustment adjustment = adjustments.get(i);
+      AdjustmentType adjustmentType = adjustment.getType();
+      StockAdjustmentReasonDto stockAdjustmentReasonDto = getStockAdjustmentReason(
+          programDto, i, adjustmentType
+      );
+
+      StockAdjustment stockAdjustment = new StockAdjustment();
+      stockAdjustment.setReasonId(stockAdjustmentReasonDto.getId());
+      stockAdjustment.setQuantity(adjustment.getQuantity());
+
+      stockAdjustments.add(stockAdjustment);
+    }
+
+    requisitionLineItem.setStockAdjustments(stockAdjustments);
+    requisitionLineItem.setTotalStockoutDays(item.getStockedOutDays().intValue());
+    requisitionLineItem.setStockOnHand(item.getClosingBalance());
+    requisitionLineItem.setCalculatedOrderQuantity(item.getCalculatedRequiredQuantity());
+    requisitionLineItem.setRequestedQuantity(item.getRequiredQuantity());
+    requisitionLineItem.setRequestedQuantityExplanation("lagacy data");
+    requisitionLineItem.setAdjustedConsumption(item.getAdjustedDispensedQuantity());
+
+    requisitionLineItem.setRemarks(item.getId().toString());
+
+    requisitionLineItem.calculateAndSetFields(
+        template, REASONS.values(), requisition.getNumberOfMonthsInPeriod()
+    );
+    return requisitionLineItem;
+  }
+
+  private Requisition initRequisition(Main main, FacilityDto facilityDto, ProgramDto programDto,
+                                      ProcessingPeriodDto processingPeriodDto,
+                                      RequisitionTemplate template) {
+    Requisition requisition = new Requisition();
+    requisition.setFacilityId(facilityDto.getId());
+    requisition.setProgramId(programDto.getId());
+    requisition.setProcessingPeriodId(processingPeriodDto.getId());
+    requisition.setCreatedDate(main.getCreatedDate().atZone(ZoneId.systemDefault()));
+    requisition.setModifiedDate(main.getModifiedDate().atZone(ZoneId.systemDefault()));
+    requisition.setDraftStatusMessage(main.getNotes());
+    requisition.setTemplate(template);
+    requisition.setNumberOfMonthsInPeriod(processingPeriodDto.getDurationInMonths());
+    requisition.setStatus(RequisitionStatus.INITIATED);
+    return requisition;
+  }
+
   private OrderableDto getOrderable(Item item) {
     OrderableDto orderableDto = ORDERABLES.get(item.getProductName());
 
@@ -259,7 +285,7 @@ public class ItemTransformService {
     return orderableDto;
   }
 
-  private StockAdjustmentReasonDto getStockAdjustmentReason(ProgramDto programDto, int i,
+  private StockAdjustmentReasonDto getStockAdjustmentReason(ProgramDto programDto, int order,
                                                             AdjustmentType adjustmentType) {
     StockAdjustmentReasonDto stockAdjustmentReasonDto = REASONS.get(adjustmentType.getCode());
 
@@ -270,7 +296,7 @@ public class ItemTransformService {
       stockAdjustmentReasonDto.setName(adjustmentType.getCode());
       stockAdjustmentReasonDto.setDescription(adjustmentType.getName());
       stockAdjustmentReasonDto.setAdditive(!adjustmentType.getNegative());
-      stockAdjustmentReasonDto.setDisplayOrder(i);
+      stockAdjustmentReasonDto.setDisplayOrder(order);
 
       REASONS.put(adjustmentType.getCode(), stockAdjustmentReasonDto);
     }
@@ -280,7 +306,7 @@ public class ItemTransformService {
 
   private int countPurposes(List<Purpose> purposes) {
     return null != purposes
-        ? purposes.stream().map(Purpose::getQuantity).reduce(0, (a, b) -> a + b)
+        ? purposes.stream().map(Purpose::getQuantity).reduce(0, (left, right) -> left + right)
         : 0;
   }
 

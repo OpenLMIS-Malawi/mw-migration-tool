@@ -20,6 +20,9 @@ public class OpenLmisProcessingPeriodRepository {
   @Autowired
   private SystemDefaultRepository systemDefaultRepository;
 
+  /**
+   * Retrieve correct processing period based on passed datetime.
+   */
   public ProcessingPeriodDto find(LocalDateTime processingDateTime) {
     SystemDefault systemDefault = systemDefaultRepository
         .findAll()
