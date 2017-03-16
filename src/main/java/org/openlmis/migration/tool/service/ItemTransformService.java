@@ -1,7 +1,6 @@
 package org.openlmis.migration.tool.service;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 
 import org.openlmis.migration.tool.domain.Adjustment;
 import org.openlmis.migration.tool.domain.AdjustmentType;
@@ -10,16 +9,16 @@ import org.openlmis.migration.tool.domain.Item;
 import org.openlmis.migration.tool.domain.Main;
 import org.openlmis.migration.tool.domain.Purpose;
 import org.openlmis.migration.tool.domain.SystemDefault;
-import org.openlmis.migration.tool.openlmis.referencedata.domain.Code;
 import org.openlmis.migration.tool.openlmis.referencedata.domain.Facility;
 import org.openlmis.migration.tool.openlmis.referencedata.domain.Orderable;
 import org.openlmis.migration.tool.openlmis.referencedata.domain.ProcessingPeriod;
 import org.openlmis.migration.tool.openlmis.referencedata.domain.Program;
 import org.openlmis.migration.tool.openlmis.referencedata.domain.StockAdjustmentReason;
-import org.openlmis.migration.tool.openlmis.referencedata.domain.TradeItem;
 import org.openlmis.migration.tool.openlmis.referencedata.repository.OpenLmisFacilityRepository;
+import org.openlmis.migration.tool.openlmis.referencedata.repository.OpenLmisOrderableRepository;
 import org.openlmis.migration.tool.openlmis.referencedata.repository.OpenLmisProcessingPeriodRepository;
 import org.openlmis.migration.tool.openlmis.referencedata.repository.OpenLmisProgramRepository;
+import org.openlmis.migration.tool.openlmis.referencedata.repository.OpenLmisStockAdjustmentReasonRepository;
 import org.openlmis.migration.tool.openlmis.requisition.domain.Requisition;
 import org.openlmis.migration.tool.openlmis.requisition.domain.RequisitionLineItem;
 import org.openlmis.migration.tool.openlmis.requisition.domain.RequisitionStatus;
@@ -42,15 +41,11 @@ import java.time.format.TextStyle;
 import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
 public class ItemTransformService {
-  private static final Map<String, Orderable> ORDERABLES = Maps.newConcurrentMap();
-  private static final Map<String, StockAdjustmentReason> REASONS = Maps.newConcurrentMap();
 
   @Autowired
   private ItemRepository itemRepository;
@@ -72,6 +67,12 @@ public class ItemTransformService {
 
   @Autowired
   private OpenLmisRequisitionTemplateRepository openLmisRequisitionTemplateRepository;
+
+  @Autowired
+  private OpenLmisStockAdjustmentReasonRepository openLmisStockAdjustmentReasonRepository;
+
+  @Autowired
+  private OpenLmisOrderableRepository openLmisOrderableRepository;
 
   @Autowired
   private SystemDefaultRepository systemDefaultRepository;
@@ -137,7 +138,7 @@ public class ItemTransformService {
           .filter(line -> line.getRemarks().equals(item.getId().toString()))
           .findFirst()
           .orElse(null);
-      Orderable orderableDto = ORDERABLES.get(item.getProductName());
+      Orderable orderableDto = openLmisOrderableRepository.find(item.getProductName());
 
       System.err.printf(
           format,
@@ -195,8 +196,8 @@ public class ItemTransformService {
 
     requisition.setRequisitionLineItems(requisitionLineItems);
 
-    Collection<Orderable> products = ORDERABLES.values();
-    
+    Collection<Orderable> products = openLmisOrderableRepository.findAll();
+
     requisition.submit(products, null);
     requisition.authorize(products, null);
     requisition.approve(null, products);
@@ -211,7 +212,7 @@ public class ItemTransformService {
                                                         RequisitionTemplate template,
                                                         Requisition requisition,
                                                         Item item) {
-    Orderable orderableDto = getOrderable(item);
+    Orderable orderableDto = openLmisOrderableRepository.find(item);
 
     RequisitionLineItem requisitionLineItem = new RequisitionLineItem();
     requisitionLineItem.setMaxPeriodsOfStock(
@@ -228,9 +229,8 @@ public class ItemTransformService {
     for (int i = 0, adjustmentsSize = adjustments.size(); i < adjustmentsSize; i++) {
       Adjustment adjustment = adjustments.get(i);
       AdjustmentType adjustmentType = adjustment.getType();
-      StockAdjustmentReason stockAdjustmentReasonDto = getStockAdjustmentReason(
-          programDto, i, adjustmentType
-      );
+      StockAdjustmentReason stockAdjustmentReasonDto = openLmisStockAdjustmentReasonRepository
+          .find(programDto, i, adjustmentType);
 
       StockAdjustment stockAdjustment = new StockAdjustment();
       stockAdjustment.setReasonId(stockAdjustmentReasonDto.getId());
@@ -250,7 +250,8 @@ public class ItemTransformService {
     requisitionLineItem.setRemarks(item.getId().toString());
 
     requisitionLineItem.calculateAndSetFields(
-        template, REASONS.values(), requisition.getNumberOfMonthsInPeriod()
+        template, openLmisStockAdjustmentReasonRepository.findAll(),
+        requisition.getNumberOfMonthsInPeriod()
     );
     return requisitionLineItem;
   }
@@ -269,40 +270,6 @@ public class ItemTransformService {
     requisition.setNumberOfMonthsInPeriod(processingPeriodDto.getDurationInMonths());
     requisition.setStatus(RequisitionStatus.INITIATED);
     return requisition;
-  }
-
-  private Orderable getOrderable(Item item) {
-    Orderable orderableDto = ORDERABLES.get(item.getProductName());
-
-    if (null == orderableDto) {
-      orderableDto = new TradeItem();
-      orderableDto.setId(UUID.randomUUID());
-      orderableDto.setProductCode(new Code(item.getProduct().getProductId()));
-      orderableDto.setName(item.getProductName());
-
-      ORDERABLES.put(item.getProductName(), orderableDto);
-    }
-    
-    return orderableDto;
-  }
-
-  private StockAdjustmentReason getStockAdjustmentReason(Program programDto, int order,
-                                                            AdjustmentType adjustmentType) {
-    StockAdjustmentReason stockAdjustmentReasonDto = REASONS.get(adjustmentType.getCode());
-
-    if (null == stockAdjustmentReasonDto) {
-      stockAdjustmentReasonDto = new StockAdjustmentReason();
-      stockAdjustmentReasonDto.setId(UUID.randomUUID());
-      stockAdjustmentReasonDto.setProgram(programDto);
-      stockAdjustmentReasonDto.setName(adjustmentType.getCode());
-      stockAdjustmentReasonDto.setDescription(adjustmentType.getName());
-      stockAdjustmentReasonDto.setAdditive(!adjustmentType.getNegative());
-      stockAdjustmentReasonDto.setDisplayOrder(order);
-
-      REASONS.put(adjustmentType.getCode(), stockAdjustmentReasonDto);
-    }
-    
-    return stockAdjustmentReasonDto;
   }
 
   private int countPurposes(List<Purpose> purposes) {
