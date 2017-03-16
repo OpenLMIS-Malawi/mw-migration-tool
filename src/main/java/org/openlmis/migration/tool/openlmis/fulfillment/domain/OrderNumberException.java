@@ -13,21 +13,14 @@
  * http://www.gnu.org/licenses.  For additional information contact info@OpenLMIS.org. 
  */
 
-package org.openlmis.migration.tool.openlmis;
+package org.openlmis.migration.tool.openlmis.fulfillment.domain;
 
-import org.joda.money.CurrencyUnit;
+/**
+ * Signals an issue with generating order number.
+ */
+public class OrderNumberException extends RuntimeException {
 
-public final class CurrencyConfig {
-
-  public static final String CURRENCY_CODE = "USD";
-  public static final String CURRENCY_SYMBOL = "$";
-  public static final String CURRENCY_SYMBOL_SIDE = "left";
-  public static final int CURRENCY_DECIMAL_PLACES =
-      CurrencyUnit.of(CURRENCY_CODE).getDecimalPlaces();
-  public static final String GROUPING_SEPARATOR = ",";
-  public static final int GROUPING_SIZE = 3;
-  public static final String DECIMAL_SEPARATOR = ".";
-
-  private CurrencyConfig() {
+  public OrderNumberException(String message) {
+    super(message);
   }
 }

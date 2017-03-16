@@ -13,21 +13,33 @@
  * http://www.gnu.org/licenses.  For additional information contact info@OpenLMIS.org. 
  */
 
-package org.openlmis.migration.tool.openlmis;
+package org.openlmis.migration.tool.openlmis.requisition.domain;
 
-import org.joda.money.CurrencyUnit;
+import org.apache.commons.lang3.ObjectUtils;
+import org.apache.commons.lang3.math.NumberUtils;
 
-public final class CurrencyConfig {
+import java.math.BigDecimal;
 
-  public static final String CURRENCY_CODE = "USD";
-  public static final String CURRENCY_SYMBOL = "$";
-  public static final String CURRENCY_SYMBOL_SIDE = "left";
-  public static final int CURRENCY_DECIMAL_PLACES =
-      CurrencyUnit.of(CURRENCY_CODE).getDecimalPlaces();
-  public static final String GROUPING_SEPARATOR = ",";
-  public static final int GROUPING_SIZE = 3;
-  public static final String DECIMAL_SEPARATOR = ".";
+public final class OpenLmisNumberUtils extends NumberUtils {
 
-  private CurrencyConfig() {
+  private OpenLmisNumberUtils() {
+    throw new UnsupportedOperationException();
   }
+
+  static int zeroIfNull(Integer value) {
+    return defaultIfNull(value, 0);
+  }
+
+  static long zeroIfNull(Long value) {
+    return defaultIfNull(value, 0L);
+  }
+
+  static BigDecimal zeroIfNull(BigDecimal value) {
+    return defaultIfNull(value, BigDecimal.ZERO);
+  }
+
+  private static <N extends Number> N defaultIfNull(N number, N defaultNumber) {
+    return ObjectUtils.defaultIfNull(number, defaultNumber);
+  }
+
 }

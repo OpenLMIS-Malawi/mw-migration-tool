@@ -13,21 +13,25 @@
  * http://www.gnu.org/licenses.  For additional information contact info@OpenLMIS.org. 
  */
 
-package org.openlmis.migration.tool.openlmis;
+package org.openlmis.migration.tool.openlmis.fulfillment.domain;
 
-import org.joda.money.CurrencyUnit;
+import static org.apache.commons.lang3.StringUtils.equalsIgnoreCase;
 
-public final class CurrencyConfig {
+import java.util.Arrays;
 
-  public static final String CURRENCY_CODE = "USD";
-  public static final String CURRENCY_SYMBOL = "$";
-  public static final String CURRENCY_SYMBOL_SIDE = "left";
-  public static final int CURRENCY_DECIMAL_PLACES =
-      CurrencyUnit.of(CURRENCY_CODE).getDecimalPlaces();
-  public static final String GROUPING_SEPARATOR = ",";
-  public static final int GROUPING_SIZE = 3;
-  public static final String DECIMAL_SEPARATOR = ".";
+public enum FtpProtocol {
+  FTP, SFTP, FTPS;
 
-  private CurrencyConfig() {
+  /**
+   * Find correct FTP protocol by the given string.
+   *
+   * @param protocol string representation of FTP protocol.
+   * @return {@link FtpProtocol} that is equal to the given string.
+   */
+  public static FtpProtocol fromString(String protocol) {
+    return Arrays.stream(values())
+        .filter(p -> equalsIgnoreCase(protocol, p.name()))
+        .findFirst()
+        .orElse(null);
   }
 }

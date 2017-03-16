@@ -13,21 +13,35 @@
  * http://www.gnu.org/licenses.  For additional information contact info@OpenLMIS.org. 
  */
 
-package org.openlmis.migration.tool.openlmis;
+package org.openlmis.migration.tool.openlmis.fulfillment.domain;
 
-import org.joda.money.CurrencyUnit;
+import static org.apache.commons.lang3.StringUtils.equalsIgnoreCase;
 
-public final class CurrencyConfig {
+public enum OrderStatus {
+  ORDERED,
+  IN_TRANSIT,
+  PICKING,
+  PICKED,
+  SHIPPED,
+  RECEIVED,
+  TRANSFER_FAILED,
+  IN_ROUTE,
+  READY_TO_PACK;
 
-  public static final String CURRENCY_CODE = "USD";
-  public static final String CURRENCY_SYMBOL = "$";
-  public static final String CURRENCY_SYMBOL_SIDE = "left";
-  public static final int CURRENCY_DECIMAL_PLACES =
-      CurrencyUnit.of(CURRENCY_CODE).getDecimalPlaces();
-  public static final String GROUPING_SEPARATOR = ",";
-  public static final int GROUPING_SIZE = 3;
-  public static final String DECIMAL_SEPARATOR = ".";
+  /**
+   * Find a correct {@link OrderStatus} instance based on the passed string. The method ignores
+   * the case.
+   *
+   * @param arg string representation of one of order status.
+   * @return instance of {@link OrderStatus} if the given string matches status; otherwise null.
+   */
+  public static OrderStatus fromString(String arg) {
+    for (OrderStatus status : values()) {
+      if (equalsIgnoreCase(arg, status.name())) {
+        return status;
+      }
+    }
 
-  private CurrencyConfig() {
+    return null;
   }
 }

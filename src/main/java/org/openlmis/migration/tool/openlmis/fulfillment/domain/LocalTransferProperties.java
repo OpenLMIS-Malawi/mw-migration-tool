@@ -13,21 +13,24 @@
  * http://www.gnu.org/licenses.  For additional information contact info@OpenLMIS.org. 
  */
 
-package org.openlmis.migration.tool.openlmis;
+package org.openlmis.migration.tool.openlmis.fulfillment.domain;
 
-import org.joda.money.CurrencyUnit;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-public final class CurrencyConfig {
+import javax.persistence.Column;
+import javax.persistence.DiscriminatorValue;
+import javax.persistence.Entity;
 
-  public static final String CURRENCY_CODE = "USD";
-  public static final String CURRENCY_SYMBOL = "$";
-  public static final String CURRENCY_SYMBOL_SIDE = "left";
-  public static final int CURRENCY_DECIMAL_PLACES =
-      CurrencyUnit.of(CURRENCY_CODE).getDecimalPlaces();
-  public static final String GROUPING_SEPARATOR = ",";
-  public static final int GROUPING_SIZE = 3;
-  public static final String DECIMAL_SEPARATOR = ".";
+@Entity
+@DiscriminatorValue("local")
+@NoArgsConstructor
+public class LocalTransferProperties extends TransferProperties {
 
-  private CurrencyConfig() {
-  }
+  @Column(columnDefinition = TEXT_COLUMN_DEFINITION)
+  @Getter
+  @Setter
+  private String path;
+
 }

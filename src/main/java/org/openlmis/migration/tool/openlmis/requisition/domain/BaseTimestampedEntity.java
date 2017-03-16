@@ -13,21 +13,34 @@
  * http://www.gnu.org/licenses.  For additional information contact info@OpenLMIS.org. 
  */
 
-package org.openlmis.migration.tool.openlmis;
+package org.openlmis.migration.tool.openlmis.requisition.domain;
 
-import org.joda.money.CurrencyUnit;
+import com.fasterxml.jackson.annotation.JsonView;
 
-public final class CurrencyConfig {
+import org.openlmis.migration.tool.openlmis.BaseEntity;
+import org.openlmis.util.View;
 
-  public static final String CURRENCY_CODE = "USD";
-  public static final String CURRENCY_SYMBOL = "$";
-  public static final String CURRENCY_SYMBOL_SIDE = "left";
-  public static final int CURRENCY_DECIMAL_PLACES =
-      CurrencyUnit.of(CURRENCY_CODE).getDecimalPlaces();
-  public static final String GROUPING_SEPARATOR = ",";
-  public static final int GROUPING_SIZE = 3;
-  public static final String DECIMAL_SEPARATOR = ".";
+import lombok.Getter;
+import lombok.Setter;
 
-  private CurrencyConfig() {
-  }
+import java.time.ZonedDateTime;
+
+import javax.persistence.Column;
+import javax.persistence.MappedSuperclass;
+
+@MappedSuperclass
+public abstract class BaseTimestampedEntity extends BaseEntity {
+
+  @Column(columnDefinition = "timestamp with time zone")
+  @JsonView(View.BasicInformation.class)
+  @Getter
+  @Setter
+  private ZonedDateTime createdDate;
+
+  @Column(columnDefinition = "timestamp with time zone")
+  @JsonView(View.BasicInformation.class)
+  @Getter
+  @Setter
+  private ZonedDateTime modifiedDate;
+
 }

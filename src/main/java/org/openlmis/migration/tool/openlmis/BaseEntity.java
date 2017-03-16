@@ -15,19 +15,33 @@
 
 package org.openlmis.migration.tool.openlmis;
 
-import org.joda.money.CurrencyUnit;
+import com.fasterxml.jackson.annotation.JsonView;
 
-public final class CurrencyConfig {
+import org.openlmis.util.View;
 
-  public static final String CURRENCY_CODE = "USD";
-  public static final String CURRENCY_SYMBOL = "$";
-  public static final String CURRENCY_SYMBOL_SIDE = "left";
-  public static final int CURRENCY_DECIMAL_PLACES =
-      CurrencyUnit.of(CURRENCY_CODE).getDecimalPlaces();
-  public static final String GROUPING_SEPARATOR = ",";
-  public static final int GROUPING_SIZE = 3;
-  public static final String DECIMAL_SEPARATOR = ".";
+import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.Type;
 
-  private CurrencyConfig() {
-  }
+import lombok.Getter;
+import lombok.Setter;
+
+import java.util.UUID;
+
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.MappedSuperclass;
+
+@MappedSuperclass
+public abstract class BaseEntity {
+  public static final String TEXT_COLUMN_DEFINITION = "text";
+  public static final String UUID_TYPE = "pg-uuid";
+
+  @Id
+  @GeneratedValue(generator = "uuid-gen")
+  @GenericGenerator(name = "uuid-gen", strategy = "uuid2")
+  @JsonView(View.BasicInformation.class)
+  @Type(type = UUID_TYPE)
+  @Getter
+  @Setter
+  protected UUID id;
 }

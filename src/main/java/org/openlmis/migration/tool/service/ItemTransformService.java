@@ -6,25 +6,26 @@ import com.google.common.collect.Maps;
 import org.openlmis.migration.tool.domain.Adjustment;
 import org.openlmis.migration.tool.domain.AdjustmentType;
 import org.openlmis.migration.tool.domain.Comment;
-import org.openlmis.migration.tool.domain.Facility;
 import org.openlmis.migration.tool.domain.Item;
 import org.openlmis.migration.tool.domain.Main;
 import org.openlmis.migration.tool.domain.Purpose;
 import org.openlmis.migration.tool.domain.SystemDefault;
-import org.openlmis.migration.tool.openlmis.domain.Requisition;
-import org.openlmis.migration.tool.openlmis.domain.RequisitionLineItem;
-import org.openlmis.migration.tool.openlmis.domain.RequisitionStatus;
-import org.openlmis.migration.tool.openlmis.domain.RequisitionTemplate;
-import org.openlmis.migration.tool.openlmis.domain.StockAdjustment;
-import org.openlmis.migration.tool.openlmis.dto.FacilityDto;
-import org.openlmis.migration.tool.openlmis.dto.OrderableDto;
-import org.openlmis.migration.tool.openlmis.dto.ProcessingPeriodDto;
-import org.openlmis.migration.tool.openlmis.dto.ProgramDto;
-import org.openlmis.migration.tool.openlmis.dto.StockAdjustmentReasonDto;
-import org.openlmis.migration.tool.openlmis.repository.OpenLmisFacilityRepository;
-import org.openlmis.migration.tool.openlmis.repository.OpenLmisProcessingPeriodRepository;
-import org.openlmis.migration.tool.openlmis.repository.OpenLmisProgramRepository;
-import org.openlmis.migration.tool.openlmis.repository.OpenLmisRequisitionTemplateRepository;
+import org.openlmis.migration.tool.openlmis.referencedata.domain.Code;
+import org.openlmis.migration.tool.openlmis.referencedata.domain.Facility;
+import org.openlmis.migration.tool.openlmis.referencedata.domain.Orderable;
+import org.openlmis.migration.tool.openlmis.referencedata.domain.ProcessingPeriod;
+import org.openlmis.migration.tool.openlmis.referencedata.domain.Program;
+import org.openlmis.migration.tool.openlmis.referencedata.domain.StockAdjustmentReason;
+import org.openlmis.migration.tool.openlmis.referencedata.domain.TradeItem;
+import org.openlmis.migration.tool.openlmis.referencedata.repository.OpenLmisFacilityRepository;
+import org.openlmis.migration.tool.openlmis.referencedata.repository.OpenLmisProcessingPeriodRepository;
+import org.openlmis.migration.tool.openlmis.referencedata.repository.OpenLmisProgramRepository;
+import org.openlmis.migration.tool.openlmis.requisition.domain.Requisition;
+import org.openlmis.migration.tool.openlmis.requisition.domain.RequisitionLineItem;
+import org.openlmis.migration.tool.openlmis.requisition.domain.RequisitionStatus;
+import org.openlmis.migration.tool.openlmis.requisition.domain.RequisitionTemplate;
+import org.openlmis.migration.tool.openlmis.requisition.domain.StockAdjustment;
+import org.openlmis.migration.tool.openlmis.requisition.repository.OpenLmisRequisitionTemplateRepository;
 import org.openlmis.migration.tool.repository.FacilityRepository;
 import org.openlmis.migration.tool.repository.ItemRepository;
 import org.openlmis.migration.tool.repository.MainRepository;
@@ -48,8 +49,8 @@ import java.util.stream.Collectors;
 
 @Service
 public class ItemTransformService {
-  private static final Map<String, OrderableDto> ORDERABLES = Maps.newConcurrentMap();
-  private static final Map<String, StockAdjustmentReasonDto> REASONS = Maps.newConcurrentMap();
+  private static final Map<String, Orderable> ORDERABLES = Maps.newConcurrentMap();
+  private static final Map<String, StockAdjustmentReason> REASONS = Maps.newConcurrentMap();
 
   @Autowired
   private ItemRepository itemRepository;
@@ -85,7 +86,7 @@ public class ItemTransformService {
         .next();
 
     LocalDateTime processingDate = systemDefault.getCurrentMonth();
-    Facility facility = facilityRepository.findOne("A");
+    org.openlmis.migration.tool.domain.Facility facility = facilityRepository.findOne("A");
 
     Main main = mainRepository.findOne(new Main.ComplexId(facility, processingDate));
 
@@ -101,9 +102,9 @@ public class ItemTransformService {
       return o1.getCategoryProduct().getOrder().compareTo(o2.getCategoryProduct().getOrder());
     });
 
-    FacilityDto facilityDto = openLmisFacilityRepository.find(facility);
-    ProgramDto programDto = openLmisProgramRepository.find();
-    ProcessingPeriodDto processingPeriodDto = openLmisProcessingPeriodRepository
+    Facility facilityDto = openLmisFacilityRepository.find(facility);
+    Program programDto = openLmisProgramRepository.find();
+    ProcessingPeriod processingPeriodDto = openLmisProcessingPeriodRepository
         .find(processingDate);
 
     RequisitionTemplate template = openLmisRequisitionTemplateRepository.find(programDto);
@@ -136,7 +137,7 @@ public class ItemTransformService {
           .filter(line -> line.getRemarks().equals(item.getId().toString()))
           .findFirst()
           .orElse(null);
-      OrderableDto orderableDto = ORDERABLES.get(item.getProductName());
+      Orderable orderableDto = ORDERABLES.get(item.getProductName());
 
       System.err.printf(
           format,
@@ -174,9 +175,9 @@ public class ItemTransformService {
   }
 
   private Requisition createRequisition(Main main, List<Item> items,
-                                        FacilityDto facilityDto,
-                                        ProgramDto programDto,
-                                        ProcessingPeriodDto processingPeriodDto,
+                                        Facility facilityDto,
+                                        Program programDto,
+                                        ProcessingPeriod processingPeriodDto,
                                         RequisitionTemplate template) {
     Requisition requisition = initRequisition(
         main, facilityDto, programDto, processingPeriodDto, template
@@ -194,7 +195,7 @@ public class ItemTransformService {
 
     requisition.setRequisitionLineItems(requisitionLineItems);
 
-    Collection<OrderableDto> products = ORDERABLES.values();
+    Collection<Orderable> products = ORDERABLES.values();
     
     requisition.submit(products, null);
     requisition.authorize(products, null);
@@ -205,12 +206,12 @@ public class ItemTransformService {
     return requisition;
   }
 
-  private RequisitionLineItem createRequisitionLineItem(ProgramDto programDto,
-                                                        ProcessingPeriodDto processingPeriodDto,
+  private RequisitionLineItem createRequisitionLineItem(Program programDto,
+                                                        ProcessingPeriod processingPeriodDto,
                                                         RequisitionTemplate template,
                                                         Requisition requisition,
                                                         Item item) {
-    OrderableDto orderableDto = getOrderable(item);
+    Orderable orderableDto = getOrderable(item);
 
     RequisitionLineItem requisitionLineItem = new RequisitionLineItem();
     requisitionLineItem.setMaxPeriodsOfStock(
@@ -227,7 +228,7 @@ public class ItemTransformService {
     for (int i = 0, adjustmentsSize = adjustments.size(); i < adjustmentsSize; i++) {
       Adjustment adjustment = adjustments.get(i);
       AdjustmentType adjustmentType = adjustment.getType();
-      StockAdjustmentReasonDto stockAdjustmentReasonDto = getStockAdjustmentReason(
+      StockAdjustmentReason stockAdjustmentReasonDto = getStockAdjustmentReason(
           programDto, i, adjustmentType
       );
 
@@ -254,8 +255,8 @@ public class ItemTransformService {
     return requisitionLineItem;
   }
 
-  private Requisition initRequisition(Main main, FacilityDto facilityDto, ProgramDto programDto,
-                                      ProcessingPeriodDto processingPeriodDto,
+  private Requisition initRequisition(Main main, Facility facilityDto, Program programDto,
+                                      ProcessingPeriod processingPeriodDto,
                                       RequisitionTemplate template) {
     Requisition requisition = new Requisition();
     requisition.setFacilityId(facilityDto.getId());
@@ -270,13 +271,13 @@ public class ItemTransformService {
     return requisition;
   }
 
-  private OrderableDto getOrderable(Item item) {
-    OrderableDto orderableDto = ORDERABLES.get(item.getProductName());
+  private Orderable getOrderable(Item item) {
+    Orderable orderableDto = ORDERABLES.get(item.getProductName());
 
     if (null == orderableDto) {
-      orderableDto = new OrderableDto();
+      orderableDto = new TradeItem();
       orderableDto.setId(UUID.randomUUID());
-      orderableDto.setProductCode(item.getProduct().getProductId());
+      orderableDto.setProductCode(new Code(item.getProduct().getProductId()));
       orderableDto.setName(item.getProductName());
 
       ORDERABLES.put(item.getProductName(), orderableDto);
@@ -285,14 +286,14 @@ public class ItemTransformService {
     return orderableDto;
   }
 
-  private StockAdjustmentReasonDto getStockAdjustmentReason(ProgramDto programDto, int order,
+  private StockAdjustmentReason getStockAdjustmentReason(Program programDto, int order,
                                                             AdjustmentType adjustmentType) {
-    StockAdjustmentReasonDto stockAdjustmentReasonDto = REASONS.get(adjustmentType.getCode());
+    StockAdjustmentReason stockAdjustmentReasonDto = REASONS.get(adjustmentType.getCode());
 
     if (null == stockAdjustmentReasonDto) {
-      stockAdjustmentReasonDto = new StockAdjustmentReasonDto();
+      stockAdjustmentReasonDto = new StockAdjustmentReason();
       stockAdjustmentReasonDto.setId(UUID.randomUUID());
-      stockAdjustmentReasonDto.setProgramId(programDto.getId());
+      stockAdjustmentReasonDto.setProgram(programDto);
       stockAdjustmentReasonDto.setName(adjustmentType.getCode());
       stockAdjustmentReasonDto.setDescription(adjustmentType.getName());
       stockAdjustmentReasonDto.setAdditive(!adjustmentType.getNegative());
@@ -329,7 +330,7 @@ public class ItemTransformService {
     return null == dateTime ? "" : dateTime.toLocalDate().toString();
   }
 
-  private String printPeriod(ProcessingPeriodDto period) {
+  private String printPeriod(ProcessingPeriod period) {
     return String.format(
         "%s-%s %d",
         period.getStartDate().getMonth().getDisplayName(TextStyle.SHORT, Locale.ENGLISH),
