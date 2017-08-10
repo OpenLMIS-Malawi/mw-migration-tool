@@ -10,7 +10,7 @@ This repository holds the files for the SCMgr Migration tool. The tool helps to 
 1. Fork/clone this repository from GitHub.
 
 ```shell
-git clone https://github.com/OpenLMIS/mw-migration-tool.git
+git clone https://github.com/OpenLMIS-Malawi/mw-migration-tool.git
 ```
 2. Build the application by using maven. After the build steps finish, you should see 'BUILD SUCCESS'.
 
