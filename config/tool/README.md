@@ -49,6 +49,7 @@ tool:
         creator: string
         requestedQuantityExplanation: string
         timeZone: string
+        updateExisting: boolean
         orderNumberConfiguration:
             orderNumberPrefix: string
             includeOrderNumberPrefix: boolean
@@ -71,6 +72,7 @@ The following list explains all settings in the *parameters* section:
 * creator - when a requisition is created we need to set who create/submit/authorize/approve and so on. This field should contain a username.
 * requestedQuantityExplanation - the value of this field will be populated into *Requested Quantity Explanation* column in each requisition.
 * timeZone - set time zone for dates
+* updateExisting - determine whether the tool should update or skip a requisition if it exists in the database 
 * orderNumberConfiguration - set how order code should be generated. By default a order code has the following pattern ```O${requsition_id}```.
 * requisitionTemplates - set requisition template for the given program. If the property is not set, there must be templates in database.
   * program: define program code or ```__ALL_PROGRAMS__``` if all programs should have the same template.

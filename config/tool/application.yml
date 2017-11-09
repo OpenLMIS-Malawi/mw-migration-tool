@@ -22,6 +22,7 @@ tool:
         creator: "scm"
         requestedQuantityExplanation: "transferred from supply manager"
         timeZone: "Africa/Johannesburg"
+        updateExisting: false
         orderNumberConfiguration:
             orderNumberPrefix: "O"
             includeOrderNumberPrefix: true

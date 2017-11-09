@@ -195,30 +195,42 @@ public class MigrationProcessor implements ItemProcessor<Main, List<Requisition>
       }
     }
 
-    boolean database = requisitionRepository
+    boolean exists = requisitionRepository
         .existsByFacilityIdAndProgramIdAndProcessingPeriodId(
             facility.getId(), program.getId(), period.getId()
         );
 
-    if (database) {
-      LOGGER.warn(
-          "Requisition for facility {}, program {} and period {} exists. Skipping...",
-          facility.getCode(), program.getCode(), period.getName()
-      );
-      return null;
+    Requisition requisition;
+
+    if (exists) {
+      if (toolProperties.getParameters().isUpdateExisting()) {
+        requisition = requisitionRepository.findByFacilityIdAndProgramIdAndProcessingPeriodId(
+            facility.getId(), program.getId(), period.getId()
+        ).get(0);
+      } else {
+        LOGGER.warn(
+            "Requisition for facility {}, program {} and period {} exists. Skipping...",
+            facility.getCode(), program.getCode(), period.getName()
+        );
+        return null;
+      }
+    } else {
+      requisition = new Requisition();
     }
 
-    Requisition requisition = new Requisition();
     requisition.setFacilityId(facility.getId());
     requisition.setProgramId(program.getId());
     requisition.setProcessingPeriodId(period.getId());
     requisition.setEmergency(false);
     requisition.setNumberOfMonthsInPeriod(period.getDurationInMonths());
 
-    RequisitionTemplate template = requisitionTemplateRepository
-        .findFirstByProgramIdOrderByCreatedDateDesc(program.getId());
+    if (null == requisition.getId()) {
+      RequisitionTemplate template = requisitionTemplateRepository
+          .findFirstByProgramIdOrderByCreatedDateDesc(program.getId());
 
-    requisition.setTemplate(template);
+      requisition.setTemplate(template);
+    }
+
     requisition.setPreviousRequisitions(Lists.newArrayList());
     requisition.setAvailableNonFullSupplyProducts(Sets.newHashSet());
     requisition.setCreatedDate(convert(main.getModifiedDate(), period.getStartDate()));
@@ -229,7 +241,13 @@ public class MigrationProcessor implements ItemProcessor<Main, List<Requisition>
     List<RequisitionLineItem> lineItems = itemConverter
         .convert(items, requisition, adjustmens, comments);
 
-    requisition.setRequisitionLineItems(lineItems);
+    if (null == requisition.getRequisitionLineItems()) {
+      requisition.setRequisitionLineItems(Lists.newArrayList());
+    }
+
+    requisition.getRequisitionLineItems().clear();
+    requisition.getRequisitionLineItems().addAll(lineItems);
+
     productHelper.add(requisition);
 
     List<RequisitionGroupProgramSchedule> schedule = requisitionGroupProgramScheduleRepository

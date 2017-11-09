@@ -20,6 +20,7 @@ public class ToolParameters {
   private String creator = "scm";
   private String requestedQuantityExplanation = "transferred from supply manager";
   private TimeZone timeZone = TimeZone.getTimeZone("Africa/Johannesburg");
+  private boolean updateExisting = false;
   private OrderNumberConfiguration orderNumberConfiguration = new OrderNumberConfiguration(
       "O", true, false, false
   );
