@@ -49,33 +49,55 @@ public class RequisitionWriter implements ItemWriter<List<Requisition>> {
 
       for (int j = 0, size = list.size(); j < size; ++j) {
         Requisition requisition = list.get(j);
-        Program program = context.findProgramById(requisition.getProgramId());
 
         requisitionRepository.save(requisition);
 
         if (requisition.getStatus() == ExternalStatus.RELEASED) {
-          createOrder(requisition, program);
+          createOrder(requisition);
         }
       }
     }
   }
 
-  private void createOrder(Requisition requisition, Program program) {
+  private void createOrder(Requisition requisition) {
+    Program program = context.findProgramById(requisition.getProgramId());
+
     if (null == program) {
       LOGGER.error("Can't find program with id {}", requisition.getProgramId());
     }
 
-    OrderNumberConfiguration config = toolProperties
-        .getParameters()
-        .getOrderNumberConfiguration();
-
+    Order orderDb = orderRepository.findByExternalId(requisition.getId());
     Order order = Order.newOrder(requisition, context.getUser());
+
+    if (null != orderDb) {
+      order.setId(orderDb.getId());
+      order.setOrderCode(orderDb.getOrderCode());
+    } else {
+      OrderNumberConfiguration config = toolProperties
+          .getParameters()
+          .getOrderNumberConfiguration();
+
+      order.setOrderCode(config.generateOrderNumber(order, program));
+    }
+
     order.setStatus(OrderStatus.RECEIVED);
-    order.setOrderCode(config.generateOrderNumber(order, program));
 
     order = orderRepository.save(order);
 
-    proofOfDeliveryRepository.save(new ProofOfDelivery(order));
+    ProofOfDelivery podDb = proofOfDeliveryRepository.findByOrder(orderDb);
+
+    if (null != orderDb && null == podDb) {
+      LOGGER.error("Can't find POD for requisition: {}", requisition.getId());
+      return;
+    }
+
+    ProofOfDelivery pod = new ProofOfDelivery(order);
+
+    if (null != podDb) {
+      pod.setId(podDb.getId());
+    }
+
+    proofOfDeliveryRepository.save(pod);
   }
 
 }
