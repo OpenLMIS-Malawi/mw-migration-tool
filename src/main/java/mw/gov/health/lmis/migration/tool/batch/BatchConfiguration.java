@@ -18,6 +18,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.task.SimpleAsyncTaskExecutor;
+import org.springframework.transaction.PlatformTransactionManager;
 
 import mw.gov.health.lmis.migration.tool.config.ToolBatchConfiguration;
 import mw.gov.health.lmis.migration.tool.config.ToolProperties;
@@ -26,24 +27,37 @@ import mw.gov.health.lmis.migration.tool.scm.domain.Main;
 
 import java.util.List;
 
+import javax.annotation.Resource;
+import javax.sql.DataSource;
+
 @Configuration
 @EnableBatchProcessing
 public class BatchConfiguration {
 
+  @Resource(name = "olmisTransactionManager")
+  private PlatformTransactionManager transactionManager;
+
+  @Resource(name = "olmisDataSource")
+  private DataSource dataSource;
+
   @Bean
   public AppBatchConfigurer batchConfigurer() {
-    return new AppBatchConfigurer();
+    AppBatchConfigurer batchConfigurer = new AppBatchConfigurer();
+    batchConfigurer.setTransactionManager(transactionManager);
+    batchConfigurer.afterPropertiesSet();
+
+    return batchConfigurer;
   }
 
   @Bean
   public BatchDatabaseInitializer batchDatabaseInitializer(ApplicationContext applicationContext,
                                                            BatchProperties batchProperties) {
-    return new AppBatchDatabaseInitializer(batchConfigurer(), applicationContext, batchProperties);
+    return new BatchDatabaseInitializer(dataSource, applicationContext, batchProperties);
   }
 
   /**
-   * Configure Spring Batch Step that will read {@link Main} object, convert it into
-   * {@link Requisition} object and save it into OpenLMIS database.
+   * Configure Spring Batch Step that will read {@link Main} object, convert it into {@link
+   * Requisition} object and save it into OpenLMIS database.
    */
   @Bean
   public Step migrationStep(StepBuilderFactory stepBuilderFactory,

@@ -1,59 +1,51 @@
 package mw.gov.health.lmis.migration.tool.batch;
 
+import org.springframework.batch.core.configuration.BatchConfigurationException;
 import org.springframework.batch.core.configuration.annotation.BatchConfigurer;
-import org.springframework.batch.core.configuration.annotation.DefaultBatchConfigurer;
 import org.springframework.batch.core.explore.JobExplorer;
+import org.springframework.batch.core.explore.support.MapJobExplorerFactoryBean;
 import org.springframework.batch.core.launch.JobLauncher;
+import org.springframework.batch.core.launch.support.SimpleJobLauncher;
 import org.springframework.batch.core.repository.JobRepository;
-import org.springframework.jdbc.datasource.embedded.EmbeddedDatabase;
-import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder;
-import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType;
+import org.springframework.batch.core.repository.support.MapJobRepositoryFactoryBean;
+import org.springframework.batch.support.transaction.ResourcelessTransactionManager;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.transaction.PlatformTransactionManager;
 
-import javax.annotation.PostConstruct;
-import javax.sql.DataSource;
+import lombok.Getter;
+import lombok.Setter;
 
-public class AppBatchConfigurer implements BatchConfigurer {
-  private DefaultBatchConfigurer defaultBatchConfigurer;
-  private EmbeddedDatabase dataSource;
+@Getter
+public class AppBatchConfigurer implements BatchConfigurer, InitializingBean {
+  private JobRepository jobRepository;
+  private JobLauncher jobLauncher;
+  private JobExplorer jobExplorer;
 
-  /**
-   * Creates a new instance of {@link AppBatchConfigurer} with embedded H2 database.
-   */
-  public AppBatchConfigurer() {
-    dataSource = new EmbeddedDatabaseBuilder()
-        .setType(EmbeddedDatabaseType.H2)
-        .setName("batch")
-        .build();
-  }
-
-  @PostConstruct
-  public void initialize() {
-    defaultBatchConfigurer = new DefaultBatchConfigurer(dataSource);
-    defaultBatchConfigurer.initialize();
-  }
+  @Setter
+  private PlatformTransactionManager transactionManager;
 
   @Override
-  public JobRepository getJobRepository() {
-    return defaultBatchConfigurer.getJobRepository();
-  }
+  public void afterPropertiesSet() {
+    try {
+      MapJobRepositoryFactoryBean jobRepositoryFactory = new MapJobRepositoryFactoryBean(
+          new ResourcelessTransactionManager()
+      );
+      jobRepositoryFactory.afterPropertiesSet();
+      jobRepository = jobRepositoryFactory.getObject();
 
-  @Override
-  public PlatformTransactionManager getTransactionManager() {
-    return defaultBatchConfigurer.getTransactionManager();
-  }
+      MapJobExplorerFactoryBean jobExplorerFactory = new MapJobExplorerFactoryBean(
+          jobRepositoryFactory
+      );
+      jobExplorerFactory.afterPropertiesSet();
+      jobExplorer = jobExplorerFactory.getObject();
 
-  @Override
-  public JobLauncher getJobLauncher() {
-    return defaultBatchConfigurer.getJobLauncher();
-  }
+      SimpleJobLauncher jobLauncher = new SimpleJobLauncher();
+      jobLauncher.setJobRepository(jobRepository);
+      jobLauncher.afterPropertiesSet();
 
-  @Override
-  public JobExplorer getJobExplorer() {
-    return defaultBatchConfigurer.getJobExplorer();
-  }
-
-  DataSource getDataSource() {
-    return dataSource;
+      this.jobLauncher = jobLauncher;
+    } catch (Exception e) {
+      throw new BatchConfigurationException(e);
+    }
   }
 }
