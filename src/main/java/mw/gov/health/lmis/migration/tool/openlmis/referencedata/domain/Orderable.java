@@ -98,7 +98,7 @@ public class Orderable extends BaseEntity {
    *
    * @param program the Program this product is (maybe) in.
    * @return the association to the given {@link Program}, or null if this product is not in the
-   * given program.
+   *         given program.
    */
   public ProgramOrderable getProgramOrderable(Program program) {
     for (ProgramOrderable programOrderable : programOrderables) {

@@ -40,6 +40,9 @@ public class BatchConfiguration {
   @Resource(name = "olmisDataSource")
   private DataSource dataSource;
 
+  /**
+   * Creates batch configurer.
+   */
   @Bean
   public AppBatchConfigurer batchConfigurer() {
     AppBatchConfigurer batchConfigurer = new AppBatchConfigurer();
@@ -141,7 +144,7 @@ public class BatchConfiguration {
     if (toolProperties.getConfiguration().getBatch().isSkipPeriods()) {
       builder.next(skipPeriodsStep);
     }
-    
+
     return builder.build();
   }
 

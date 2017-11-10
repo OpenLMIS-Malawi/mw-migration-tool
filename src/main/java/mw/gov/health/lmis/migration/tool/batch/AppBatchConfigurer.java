@@ -44,8 +44,8 @@ public class AppBatchConfigurer implements BatchConfigurer, InitializingBean {
       jobLauncher.afterPropertiesSet();
 
       this.jobLauncher = jobLauncher;
-    } catch (Exception e) {
-      throw new BatchConfigurationException(e);
+    } catch (Exception exp) {
+      throw new BatchConfigurationException(exp);
     }
   }
 }
