@@ -61,6 +61,7 @@ public class SupervisionRoleAssignment extends RoleAssignment {
     this(role, user);
     this.program = program;
     addSupervisions();
+    addRightAssignments();
   }
 
   /**
@@ -78,6 +79,7 @@ public class SupervisionRoleAssignment extends RoleAssignment {
     this.program = program;
     this.supervisoryNode = supervisoryNode;
     addSupervisions();
+    addRightAssignments();
   }
 
   @Override
@@ -105,6 +107,21 @@ public class SupervisionRoleAssignment extends RoleAssignment {
     }
 
     return roleContainsRight && programMatches && facilityFound;
+  }
+
+  private void addRightAssignments() {
+    if (null != supervisoryNode) {
+      Set<Facility> supervisedFacilities = supervisoryNode.getAllSupervisedFacilities(program);
+      for (Right right : role.getRights()) {
+        for (Facility facility : supervisedFacilities) {
+          user.addRightAssignment(right.getName(), facility.getId(), program.getId());
+        }
+      }
+    } else {
+      for (Right right : role.getRights()) {
+        user.addRightAssignment(right.getName(), user.getHomeFacility().getId(), program.getId());
+      }
+    }
   }
 
   /**

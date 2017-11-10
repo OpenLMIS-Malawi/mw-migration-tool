@@ -65,9 +65,7 @@ public class Right extends BaseEntity {
   @Getter
   private Set<Right> attachments = new HashSet<>();
 
-  @ManyToMany(
-      mappedBy = "rights"
-  )
+  @ManyToMany(mappedBy = "rights")
   private Set<Role> roles;
 
   private Right(String name, RightType type) {

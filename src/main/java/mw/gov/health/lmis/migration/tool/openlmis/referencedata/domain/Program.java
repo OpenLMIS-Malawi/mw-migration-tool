@@ -32,37 +32,30 @@ import javax.persistence.PrePersist;
 import javax.persistence.Table;
 
 @Entity
+@Getter
+@Setter
 @Table(name = "programs", schema = "referencedata")
 public class Program extends BaseEntity {
 
   @Column(nullable = false, unique = true, columnDefinition = "text")
-  @Getter
-  @Setter
   @Embedded
   private Code code;
 
   @Column(columnDefinition = "text")
-  @Getter
-  @Setter
   private String name;
 
   @Column(columnDefinition = "text")
-  @Getter
-  @Setter
   private String description;
 
-  @Getter
-  @Setter
   private Boolean active;
 
   @Column(nullable = false)
-  @Getter
-  @Setter
   private Boolean periodsSkippable;
 
-  @Getter
-  @Setter
   private Boolean showNonFullSupplyTab;
+
+  @Column(nullable = false)
+  private Boolean enableDatePhysicalStockCountCompleted;
 
   public Program() {
     code = null;
@@ -90,6 +83,9 @@ public class Program extends BaseEntity {
   private void prePersist() {
     if (this.periodsSkippable == null) {
       this.periodsSkippable = false;
+    }
+    if (this.enableDatePhysicalStockCountCompleted == null) {
+      this.enableDatePhysicalStockCountCompleted = false;
     }
   }
 
@@ -133,6 +129,8 @@ public class Program extends BaseEntity {
     program.setActive(importer.getActive());
     program.setPeriodsSkippable(importer.getPeriodsSkippable());
     program.setShowNonFullSupplyTab(importer.getShowNonFullSupplyTab());
+    program.setEnableDatePhysicalStockCountCompleted(
+        importer.getEnableDatePhysicalStockCountCompleted());
 
     return program;
   }
@@ -153,6 +151,7 @@ public class Program extends BaseEntity {
     exporter.setActive(active);
     exporter.setPeriodsSkippable(periodsSkippable);
     exporter.setShowNonFullSupplyTab(showNonFullSupplyTab);
+    exporter.setEnableDatePhysicalStockCountCompleted(enableDatePhysicalStockCountCompleted);
   }
 
   public interface Exporter {
@@ -170,6 +169,8 @@ public class Program extends BaseEntity {
     void setPeriodsSkippable(Boolean periodsSkippable);
 
     void setShowNonFullSupplyTab(Boolean showNonFullSupplyTab);
+
+    void setEnableDatePhysicalStockCountCompleted(Boolean enableDatePhysicalStockCountCompleted);
   }
 
   public interface Importer {
@@ -188,5 +189,6 @@ public class Program extends BaseEntity {
 
     Boolean getShowNonFullSupplyTab();
 
+    Boolean getEnableDatePhysicalStockCountCompleted();
   }
 }

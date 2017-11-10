@@ -82,6 +82,16 @@ public class JasperTemplateParameter extends BaseEntity {
   @Column(columnDefinition = TEXT_COLUMN_DEFINITION)
   @Getter
   @Setter
+  private String selectMethod;
+
+  @Column(columnDefinition = TEXT_COLUMN_DEFINITION)
+  @Getter
+  @Setter
+  private String selectBody;
+
+  @Column(columnDefinition = TEXT_COLUMN_DEFINITION)
+  @Getter
+  @Setter
   private String selectProperty;
 
   @Column(columnDefinition = TEXT_COLUMN_DEFINITION)

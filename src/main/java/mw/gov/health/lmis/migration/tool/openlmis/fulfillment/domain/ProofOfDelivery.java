@@ -24,7 +24,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import mw.gov.health.lmis.migration.tool.openlmis.BaseEntity;
 
-import java.time.ZonedDateTime;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -81,8 +81,7 @@ public class ProofOfDelivery extends BaseEntity {
 
   @Getter
   @Setter
-  @Column(columnDefinition = "timestamp with time zone")
-  private ZonedDateTime receivedDate;
+  private LocalDate receivedDate;
 
   /**
    * Creates a new instance of Proof Of Delivery based on the passed order.

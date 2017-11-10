@@ -158,7 +158,9 @@ public class ProgramOrderable extends BaseEntity {
     }
 
     ProgramOrderable otherProgProduct = (ProgramOrderable) other;
-    return program.equals(otherProgProduct.program) && product.equals(otherProgProduct.product);
+
+    return Objects.equals(program, otherProgProduct.program)
+        && Objects.equals(product, otherProgProduct.product);
   }
 
   @Override

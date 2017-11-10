@@ -29,6 +29,7 @@ import java.util.Set;
 import javax.persistence.CascadeType;
 import javax.persistence.CollectionTable;
 import javax.persistence.Column;
+import javax.persistence.Convert;
 import javax.persistence.ElementCollection;
 import javax.persistence.Embedded;
 import javax.persistence.Entity;
@@ -37,13 +38,15 @@ import javax.persistence.JoinColumn;
 import javax.persistence.MapKeyColumn;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
 
 /**
- * Products that are Orderable by Program.  An Orderable represent any medical commodities
- * that may be ordered/requisitioned, typically by a {@link Program}.
+ * Products that are Orderable by Program.  An Orderable represent any medical commodities that may
+ * be ordered/requisitioned, typically by a {@link Program}.
  */
 @Entity
-@Table(name = "orderables", schema = "referencedata")
+@Table(name = "orderables", schema = "referencedata",
+    uniqueConstraints = @UniqueConstraint(name = "unq_productCode", columnNames = "code"))
 @NoArgsConstructor
 @AllArgsConstructor
 public class Orderable extends BaseEntity {
@@ -86,11 +89,16 @@ public class Orderable extends BaseEntity {
       joinColumns = @JoinColumn(name = "orderableId"))
   private Map<String, String> identifiers;
 
+  @Column(name = "extradata", columnDefinition = "jsonb")
+  @Convert(converter = ExtraDataConverter.class)
+  private Map<String, String> extraData;
+
   /**
    * Get the association to a {@link Program}.
+   *
    * @param program the Program this product is (maybe) in.
    * @return the association to the given {@link Program}, or null if this product is not in the
-   *        given program.
+   * given program.
    */
   public ProgramOrderable getProgramOrderable(Program program) {
     for (ProgramOrderable programOrderable : programOrderables) {
@@ -103,8 +111,9 @@ public class Orderable extends BaseEntity {
   }
 
   /**
-   * Returns the number of packs to order. For this Orderable given a desired number of
-   * dispensing units, will return the number of packs that should be ordered.
+   * Returns the number of packs to order. For this Orderable given a desired number of dispensing
+   * units, will return the number of packs that should be ordered.
+   *
    * @param dispensingUnits # of dispensing units we'd like to order for
    * @return the number of packs that should be ordered.
    */
@@ -129,6 +138,7 @@ public class Orderable extends BaseEntity {
 
   /**
    * Determines equality based on product codes.
+   *
    * @param object another Orderable, ideally.
    * @return true if the two are semantically equal.  False otherwise.
    */

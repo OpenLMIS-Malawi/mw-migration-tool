@@ -23,6 +23,8 @@ import static mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.Requ
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.Type;
 import org.joda.money.CurrencyUnit;
 import org.joda.money.Money;
@@ -33,10 +35,11 @@ import lombok.Setter;
 import mw.gov.health.lmis.migration.tool.openlmis.BaseEntity;
 import mw.gov.health.lmis.migration.tool.openlmis.CurrencyConfig;
 import mw.gov.health.lmis.migration.tool.openlmis.ExternalStatus;
+import mw.gov.health.lmis.migration.tool.openlmis.RightName;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Orderable;
-import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.StockAdjustmentReason;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.RequisitionHelper;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -79,6 +82,8 @@ public class Requisition extends BaseTimestampedEntity {
   public static final String MODIFIED_DATE = "modifiedDate";
   public static final String STATUS = "status";
   public static final String REQUISITION = "requisition";
+  public static final String DATE_PHYSICAL_STOCK_COUNT_COMPLETED =
+      "datePhysicalStockCountCompleted";
 
   @OneToMany(
       mappedBy = REQUISITION,
@@ -87,6 +92,7 @@ public class Requisition extends BaseTimestampedEntity {
       orphanRemoval = true)
   @Getter
   @Setter
+  @Fetch(FetchMode.SELECT)
   private List<RequisitionLineItem> requisitionLineItems;
 
   @Getter
@@ -129,9 +135,11 @@ public class Requisition extends BaseTimestampedEntity {
 
   @OneToMany(
       mappedBy = REQUISITION,
+      fetch = FetchType.EAGER,
       cascade = CascadeType.ALL)
   @Getter
   @Setter
+  @Fetch(FetchMode.SELECT)
   private List<StatusChange> statusChanges = new ArrayList<>();
 
   @Column(nullable = false)
@@ -169,12 +177,32 @@ public class Requisition extends BaseTimestampedEntity {
   @Type(type = UUID_TYPE)
   private Set<UUID> availableNonFullSupplyProducts;
 
+  @Getter
+  @Setter
+  private LocalDate datePhysicalStockCountCompleted;
+
+  @OneToMany(
+      cascade = {CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH, CascadeType.REMOVE},
+      fetch = FetchType.EAGER,
+      orphanRemoval = true)
+  @JoinColumn(name = "requisitionId")
+  @Getter
+  @Setter
+  @Fetch(FetchMode.SELECT)
+  private List<StockAdjustmentReason> stockAdjustmentReasons = new ArrayList<>();
+
+  @OneToMany(mappedBy = REQUISITION, fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+  @Getter
+  private List<RequisitionPermissionString> permissionStrings = new ArrayList<>();
+
   @OneToMany(
       mappedBy = REQUISITION,
       cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.REMOVE},
+      fetch = FetchType.EAGER,
       orphanRemoval = true)
   @Getter
   @Setter
+  @Fetch(FetchMode.SELECT)
   private List<StatusMessage> statusMessages;
 
   /**
@@ -193,6 +221,8 @@ public class Requisition extends BaseTimestampedEntity {
     this.processingPeriodId = processingPeriodId;
     this.status = status;
     this.emergency = emergency;
+    permissionStrings.add(RequisitionPermissionString.newRequisitionPermissionString(this,
+        RightName.REQUISITION_VIEW, facilityId, programId));
   }
 
   /**
@@ -292,7 +322,7 @@ public class Requisition extends BaseTimestampedEntity {
    *
    * @param productId UUID of orderable product
    * @return first RequisitionLineItem that have productId property equals to the given productId
-   *         argument; otherwise null;
+   * argument; otherwise null;
    */
   public RequisitionLineItem findLineByProductId(UUID productId) {
     if (null == requisitionLineItems) {
@@ -397,8 +427,8 @@ public class Requisition extends BaseTimestampedEntity {
   }
 
   /**
-   * Sets appropriate value for Previous Adjusted Consumptions field in
-   * each {@link RequisitionLineItem}.
+   * Sets appropriate value for Previous Adjusted Consumptions field in each {@link
+   * RequisitionLineItem}.
    */
   void setPreviousAdjustedConsumptions(int numberOfPreviousPeriodsToAverage) {
     List<RequisitionLineItem> previousRequisitionLineItems = RequisitionHelper
@@ -426,13 +456,6 @@ public class Requisition extends BaseTimestampedEntity {
         .map(RequisitionLineItem::getTotalCost).filter(Objects::nonNull).reduce(Money::plus);
 
     return money.isPresent() ? money.get() : defaultValue;
-  }
-
-  private void calculateAndValidateTemplateFields(
-      RequisitionTemplate template, Collection<StockAdjustmentReason> stockAdjustmentReasons) {
-    getNonSkippedFullSupplyRequisitionLineItems()
-        .forEach(line -> line.calculateAndSetFields(template, stockAdjustmentReasons,
-            numberOfMonthsInPeriod));
   }
 
   private void updateConsumptions() {

@@ -13,7 +13,7 @@
  * http://www.gnu.org/licenses.  For additional information contact info@OpenLMIS.org. 
  */
 
-package mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain;
+package mw.gov.health.lmis.migration.tool.openlmis;
 
 
 public class RightName {
@@ -31,4 +31,12 @@ public class RightName {
   public static final String FACILITY_APPROVED_ORDERABLES_MANAGE =
       "FACILITY_APPROVED_ORDERABLES_MANAGE";
   public static final String RIGHTS_VIEW = "RIGHTS_VIEW";
+
+  public static final String ORDERS_EDIT = "ORDERS_EDIT";
+
+  public static final String REQUISITION_APPROVE = "REQUISITION_APPROVE";
+  public static final String REQUISITION_AUTHORIZE = "REQUISITION_AUTHORIZE";
+  public static final String REQUISITION_CREATE = "REQUISITION_CREATE";
+  public static final String REQUISITION_DELETE = "REQUISITION_DELETE";
+  public static final String REQUISITION_VIEW = "REQUISITION_VIEW";
 }

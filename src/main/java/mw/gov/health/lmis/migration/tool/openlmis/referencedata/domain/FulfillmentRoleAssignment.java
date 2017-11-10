@@ -58,6 +58,10 @@ public class FulfillmentRoleAssignment extends RoleAssignment {
     }
 
     this.warehouse = warehouse;
+
+    for (Right right : role.getRights()) {
+      user.addRightAssignment(right.getName(), warehouse.getId());
+    }
   }
 
   @Override

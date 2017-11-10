@@ -29,8 +29,17 @@ import javax.persistence.Entity;
 @NoArgsConstructor
 public class DirectRoleAssignment extends RoleAssignment {
 
+  /**
+   * Default constructor. Must always have a role and a user.
+   *
+   * @param role      the role being assigned
+   * @param user      the user to which the role is being assigned
+   */
   public DirectRoleAssignment(Role role, User user) {
     super(role, user);
+    for (Right right : role.getRights()) {
+      user.addRightAssignment(right.getName());
+    }
   }
 
   @Override
