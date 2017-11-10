@@ -195,6 +195,7 @@ tool:
                      displayOrder: 23
     configuration:
         accessFile: "data.mdb"
+        password: ""
         olmis:
             dialect: "org.hibernate.spatial.dialect.postgis.PostgisDialect"
             showSql: false

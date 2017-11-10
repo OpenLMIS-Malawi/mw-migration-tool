@@ -84,6 +84,7 @@ The following list explains all settings in the *parameters* section:
 tool:
     configuration:
         accessFile: string
+        password: string
         olmis:
             dialect: string
             showSql: boolean
@@ -104,7 +105,8 @@ tool:
 ```
 Before the tool can migrate data from supply manager into OpenLMIS system, it needs to know where SCM database file is located and where is a OpenLMIS database. This section also contains addictional Spring Batch settings.
 
-* accessFile - defaine where is SCMgr database file. You can set absolute path like ```/home/user/data.mdb``` or relate path like ```../../data.mdb```.
+* accessFile - define where is SCMgr database file. You can set absolute path like ```/home/user/data.mdb``` or relate path like ```../../data.mdb```.
+* password - define password for SCMgr database file. Can be empty.
 * olmis - provide details about OpenLMIS database
   * dialect - select what dialect should by used by Hibernate
   * showSql - define if SQL statements should be visible on output

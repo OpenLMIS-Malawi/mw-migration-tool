@@ -9,6 +9,7 @@ import java.io.File;
 @Setter
 public class ToolConfiguration {
   private File accessFile;
+  private String password;
   private ToolOlmisConfiguration olmis = new ToolOlmisConfiguration();
   private ToolBatchConfiguration batch = new ToolBatchConfiguration();
 }

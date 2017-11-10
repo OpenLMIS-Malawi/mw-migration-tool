@@ -70,6 +70,11 @@
             <artifactId>jackcess</artifactId>
             <version>2.1.6</version>
         </dependency>
+        <dependency>
+            <groupId>com.healthmarketscience.jackcess</groupId>
+            <artifactId>jackcess-encrypt</artifactId>
+            <version>2.1.4</version>
+        </dependency>
         <!-- databases -->
         <dependency>
             <groupId>org.postgresql</groupId>
