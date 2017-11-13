@@ -113,7 +113,7 @@ public final class AppContext implements InitializingBean {
     return periods.stream().filter(predicate).findFirst().orElse(null);
   }
 
-  public List<ProcessingPeriod> findPeriods(Predicate<ProcessingPeriod> predicate) {
+  List<ProcessingPeriod> findPeriods(Predicate<ProcessingPeriod> predicate) {
     return periods.stream().filter(predicate).collect(Collectors.toList());
   }
 
