@@ -1,16 +1,11 @@
 package mw.gov.health.lmis.migration.tool;
 
-import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Table;
 import com.google.common.collect.Table.Cell;
 import com.google.common.collect.TreeBasedTable;
 
-import de.vandermeer.asciitable.AT_Context;
 import de.vandermeer.asciitable.AsciiTable;
-import de.vandermeer.asciithemes.TA_Grid;
-import de.vandermeer.asciithemes.TA_GridThemes;
-import de.vandermeer.asciithemes.u8.U8_Grids;
 import de.vandermeer.skb.interfaces.transformers.textformat.TextAlignment;
 
 import org.slf4j.Logger;
