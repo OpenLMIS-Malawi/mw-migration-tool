@@ -117,6 +117,9 @@ public final class AppContext implements InitializingBean {
     return periods.stream().filter(predicate).collect(Collectors.toList());
   }
 
+  /**
+   * Find previous period based on current.
+   */
   public ProcessingPeriod findPreviousPeriod(UUID periodId) {
     ProcessingPeriod period = findPeriodById(periodId);
 
