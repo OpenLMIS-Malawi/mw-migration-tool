@@ -27,10 +27,12 @@ public class App {
 
   @Bean
   CommandLineRunner commandLineRunner(JobLauncher launcher, Job job,
-                                      RequisitionTemplateCreator templateCreator) {
+                                      RequisitionTemplateCreator templateCreator,
+                                      ReportService reportService) {
     return args -> {
       templateCreator.createTemplates();
       launcher.run(job, new JobParameters());
+      reportService.printSummaryReport();
     };
   }
 
