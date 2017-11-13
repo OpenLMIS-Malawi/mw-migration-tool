@@ -6,6 +6,7 @@ import org.springframework.batch.item.ItemWriter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import mw.gov.health.lmis.migration.tool.AppContext;
 import mw.gov.health.lmis.migration.tool.config.ToolProperties;
 import mw.gov.health.lmis.migration.tool.openlmis.ExternalStatus;
 import mw.gov.health.lmis.migration.tool.openlmis.fulfillment.domain.Order;
@@ -37,7 +38,7 @@ public class RequisitionWriter implements ItemWriter<List<Requisition>> {
   private ToolProperties toolProperties;
 
   @Autowired
-  private AppBatchContext context;
+  private AppContext context;
 
   /**
    * Writes Requisitions into OpenLMIS database.

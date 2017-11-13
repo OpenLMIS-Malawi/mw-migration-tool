@@ -12,6 +12,7 @@ import org.springframework.batch.item.ItemProcessor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import mw.gov.health.lmis.migration.tool.AppContext;
 import mw.gov.health.lmis.migration.tool.config.ToolProperties;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Facility;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.ProcessingPeriod;
@@ -44,7 +45,7 @@ public class SkipPeriodsProcessor implements ItemProcessor<String, List<Requisit
   private ToolProperties toolProperties;
 
   @Autowired
-  private AppBatchContext context;
+  private AppContext context;
 
   @Override
   public List<Requisition> process(String item) throws Exception {

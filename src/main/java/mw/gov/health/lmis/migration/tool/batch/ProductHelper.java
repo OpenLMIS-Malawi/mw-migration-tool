@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import mw.gov.health.lmis.migration.tool.AppContext;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.ProcessingPeriod;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.Requisition;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.RequisitionLineItem;
@@ -25,7 +26,7 @@ class ProductHelper {
   private RequisitionRepository requisitionRepository;
 
   @Autowired
-  private AppBatchContext context;
+  private AppContext context;
 
   void add(Requisition requisition) {
     for (int i = 0, size = requisition.getRequisitionLineItems().size(); i < size; ++i) {

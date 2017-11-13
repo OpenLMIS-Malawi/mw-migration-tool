@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import mw.gov.health.lmis.migration.tool.AppContext;
 import mw.gov.health.lmis.migration.tool.config.MappingHelper;
 import mw.gov.health.lmis.migration.tool.config.ToolProperties;
 import mw.gov.health.lmis.migration.tool.openlmis.OnlyId;
@@ -70,7 +71,7 @@ public class ItemConverter {
   private ProductHelper productHelper;
 
   @Autowired
-  private AppBatchContext context;
+  private AppContext context;
 
   /**
    * Converts {@link Item} object into {@link RequisitionLineItem} object.

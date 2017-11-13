@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
+import mw.gov.health.lmis.migration.tool.AppContext;
 import mw.gov.health.lmis.migration.tool.config.MappingHelper;
 import mw.gov.health.lmis.migration.tool.config.ToolProperties;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Facility;
@@ -95,7 +96,7 @@ public class MigrationProcessor implements ItemProcessor<Main, List<Requisition>
   private ProductHelper productHelper;
 
   @Autowired
-  private AppBatchContext context;
+  private AppContext context;
 
   /**
    * Converts the given {@link Main} object into {@link Requisition} object.

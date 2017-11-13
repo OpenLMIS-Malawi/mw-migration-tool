@@ -1,4 +1,4 @@
-package mw.gov.health.lmis.migration.tool.batch;
+package mw.gov.health.lmis.migration.tool;
 
 import com.google.common.collect.Lists;
 
@@ -31,8 +31,8 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 @Component
-final class AppBatchContext implements InitializingBean {
-  private static final Logger LOGGER = LoggerFactory.getLogger(AppBatchContext.class);
+public final class AppContext implements InitializingBean {
+  private static final Logger LOGGER = LoggerFactory.getLogger(AppContext.class);
 
   @Autowired
   private ProgramRepository programRepository;
@@ -97,11 +97,11 @@ final class AppBatchContext implements InitializingBean {
     LOGGER.info("Initialized batch context...");
   }
 
-  Program findProgramById(UUID id) {
+  public Program findProgramById(UUID id) {
     return findProgram(elem -> id.equals(elem.getId()));
   }
 
-  Program findProgramByCode(String code) {
+  public Program findProgramByCode(String code) {
     return findProgram(elem -> code.equals(elem.getCode().toString()));
   }
 
@@ -109,11 +109,15 @@ final class AppBatchContext implements InitializingBean {
     return programs.stream().filter(predicate).findFirst().orElse(null);
   }
 
-  ProcessingPeriod findPeriod(Predicate<ProcessingPeriod> predicate) {
+  public ProcessingPeriod findPeriod(Predicate<ProcessingPeriod> predicate) {
     return periods.stream().filter(predicate).findFirst().orElse(null);
   }
 
-  ProcessingPeriod findPreviousPeriod(UUID periodId) {
+  public List<ProcessingPeriod> findPeriods(Predicate<ProcessingPeriod> predicate) {
+    return periods.stream().filter(predicate).collect(Collectors.toList());
+  }
+
+  public ProcessingPeriod findPreviousPeriod(UUID periodId) {
     ProcessingPeriod period = findPeriodById(periodId);
 
     if (null == period) {
@@ -138,7 +142,7 @@ final class AppBatchContext implements InitializingBean {
     return list.isEmpty() ? null : list.get(0);
   }
 
-  private ProcessingPeriod findPeriodById(UUID id) {
+  public ProcessingPeriod findPeriodById(UUID id) {
     return periods.stream().filter(elem -> id.equals(elem.getId())).findFirst().orElse(null);
   }
 
